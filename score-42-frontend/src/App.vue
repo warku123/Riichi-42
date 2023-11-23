@@ -6,7 +6,7 @@
       <button @click="checkKey">提交</button>
       <p v-if="showError" class="error">密钥错误，请重试</p>
     </div>
-    <div class="container">
+    <div v-else class="container">
       <h2>麻将分数记录</h2>
       <form @submit.prevent="submitScores" class="score-form">
         <div v-for="(player, index) in players" :key="index" class="player-entry">
@@ -51,7 +51,7 @@ export default {
       inputKey: '',
       authenticated: false,
       showError: false,
-      correctKey: '73475cb40a568e8da8a045ced110137e159f890ac4da883b6b17dc651b3a8049',
+      hashedCorrectKey: '73475cb40a568e8da8a045ced110137e159f890ac4da883b6b17dc651b3a8049',
       players: Array(4).fill().map(() => ({ name: '', score: 0 })),
       playerNames: ['玩家 A', '玩家 B', '玩家 C', '玩家 D'],
       scoreRecords: []
@@ -80,6 +80,12 @@ export default {
 </script>
 
 <style>
+.login-container {
+  width: 80%;
+  margin: auto;
+  text-align: center;
+}
+
 .container {
   width: 80%;
   margin: auto;
