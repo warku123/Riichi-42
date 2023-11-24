@@ -6,7 +6,7 @@ from player import *
 app = Flask(__name__)
 
 # MongoDB设置
-client = MongoClient('mongodb://8.130.67.151:27017/')
+client = MongoClient('mongodb://localhost:27017/')
 db = client['mahjong_league']
 matches_collection = db['mahjong_matches']
 players_collection = db['players']
