@@ -1,9 +1,5 @@
-// 简单的认证工具函数
-// 用户名和密码使用 SHA-256 哈希存储
-
-// 存储的哈希值（用户名: admin42, 密码: Kqdsxz-604）
-const USERNAME_HASH = 'c674d9cdee160ebec3ed9ec138ac473480054483f185be25c27e51f35f30175f';
-const PASSWORD_HASH = 'ebab04c5516d19cef2988945dc2303ec5552091f8252ee55a8d2fbca803d5f33';
+const USERNAME_HASH = '43df0c909337b0435b06f388c2567a8c54ee489e93b82e1e0551d08ff1a4abe2';
+const PASSWORD_HASH = '307c5aeca4d279c688321f4373d8ce40b9160b1b3434e390deb65d2b601ebc58';
 
 // 计算字符串的 SHA-256 哈希
 async function sha256(message: string): Promise<string> {
