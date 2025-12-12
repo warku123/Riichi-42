@@ -36,12 +36,107 @@
   padding: 2rem;
 }
 
-.placeholder {
-  text-align: center;
-  padding: 3rem;
-  color: #999;
+.card {
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.sectionTitle {
+  margin: 0 0 1rem 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.form {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.form input {
+  flex: 1;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.form button {
+  padding: 0.75rem 1.25rem;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.form button:hover:not(:disabled) {
+  background: #5568d3;
+}
+
+.message {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  background: #f5f0ff;
+  border: 1px solid #e0d8ff;
+  color: #4b3f8f;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.placeholder {
+  text-align: center;
+  padding: 2rem;
+  color: #999;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #f0f0f0;
+  text-align: left;
+}
+
+.table th {
+  background: #f8f8f8;
+  font-weight: 600;
+  color: #555;
+}
+
+.deleteButton {
+  padding: 0.4rem 0.8rem;
+  background: #fef2f2;
+  color: #c0392b;
+  border: 1px solid #f5c2c0;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.deleteButton:hover:not(:disabled) {
+  background: #fde3e3;
+  border-color: #f1a7a5;
+}
+
+.deleteButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
