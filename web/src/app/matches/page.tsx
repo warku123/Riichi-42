@@ -169,6 +169,11 @@ export default function MatchesPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
+  const apiHeaders =
+    typeof process !== "undefined"
+      ? { "x-api-key": process.env.NEXT_PUBLIC_API_SECRET ?? "" }
+      : undefined;
+
   useEffect(() => {
     setMounted(true);
     if (!isAuthenticated()) {
@@ -188,7 +193,7 @@ export default function MatchesPage() {
 
   const loadPlayers = async () => {
     try {
-      const res = await fetch("/api/players");
+      const res = await fetch("/api/players", { headers: apiHeaders });
       const data = await res.json();
       if (data.data) {
         setPlayers(data.data);
@@ -208,14 +213,18 @@ export default function MatchesPage() {
         const end = new Date(endDate);
         params.set("end", end.toISOString());
       }
-      const res = await fetch(`/api/matches?${params.toString()}`);
+      const res = await fetch(`/api/matches?${params.toString()}`, {
+        headers: apiHeaders,
+      });
       const data = await res.json();
       if (data.data) {
         const matchesData: Match[] = data.data;
         const matchesWithResults = await Promise.all(
           matchesData.map(async (m) => {
             try {
-              const rRes = await fetch(`/api/matches/${m.id}/results`);
+              const rRes = await fetch(`/api/matches/${m.id}/results`, {
+                headers: apiHeaders,
+              });
               const rData = await rRes.json();
               return { ...m, results: rData.data || [] };
             } catch {
@@ -306,7 +315,7 @@ export default function MatchesPage() {
         // 更新对局基础信息
         const res = await fetch(`/api/matches/${editingId}`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...(apiHeaders || {}) },
           body: JSON.stringify(payload),
         });
         if (!res.ok) {
@@ -317,7 +326,7 @@ export default function MatchesPage() {
         // 创建新对局
         const res = await fetch("/api/matches", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...(apiHeaders || {}) },
           body: JSON.stringify(payload),
         });
         const data = await res.json();
@@ -343,7 +352,7 @@ export default function MatchesPage() {
 
       const resResult = await fetch(`/api/matches/${matchId}/results`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(apiHeaders || {}) },
         body: JSON.stringify({ results }),
       });
       const resData = await resResult.json();
@@ -389,7 +398,10 @@ export default function MatchesPage() {
     setSubmitting(true);
     setMessage(null);
     try {
-      const res = await fetch(`/api/matches/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/matches/${id}`, {
+        method: "DELETE",
+        headers: apiHeaders,
+      });
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || "删除失败");

@@ -20,6 +20,11 @@ export default function PlayersPage() {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
+  const apiHeaders =
+    typeof process !== "undefined"
+      ? { "x-api-key": process.env.NEXT_PUBLIC_API_SECRET ?? "" }
+      : undefined;
+
   useEffect(() => {
     setMounted(true);
     if (!isAuthenticated()) {
@@ -31,7 +36,7 @@ export default function PlayersPage() {
 
   const loadPlayers = async () => {
     try {
-      const res = await fetch("/api/players");
+      const res = await fetch("/api/players", { headers: apiHeaders });
       const data = await res.json();
       if (data.data) {
         setPlayers(data.data);
@@ -58,6 +63,7 @@ export default function PlayersPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: name.trim() }),
+        ...(apiHeaders ? { headers: { ...apiHeaders, "Content-Type": "application/json" } } : {}),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -81,7 +87,7 @@ export default function PlayersPage() {
     try {
       const res = await fetch("/api/players", {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(apiHeaders || {}) },
         body: JSON.stringify({ id }),
       });
       const data = await res.json();

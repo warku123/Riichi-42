@@ -39,6 +39,11 @@ export default function Home() {
   const [recentMatches, setRecentMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const apiHeaders =
+    typeof process !== "undefined"
+      ? { "x-api-key": process.env.NEXT_PUBLIC_API_SECRET ?? "" }
+      : undefined;
+
   useEffect(() => {
     setMounted(true);
     if (!isAuthenticated()) {
@@ -51,7 +56,9 @@ export default function Home() {
   const loadData = async () => {
     try {
       // 加载天梯榜
-      const leaderboardRes = await fetch("/api/stats/totals");
+      const leaderboardRes = await fetch("/api/stats/totals", {
+        headers: apiHeaders,
+      });
       if (!leaderboardRes.ok) {
         console.error("加载天梯榜失败:", leaderboardRes.statusText);
       } else {
@@ -64,7 +71,9 @@ export default function Home() {
       }
 
       // 加载最近5场对局
-      const matchesRes = await fetch("/api/matches?limit=5");
+      const matchesRes = await fetch("/api/matches?limit=5", {
+        headers: apiHeaders,
+      });
       if (!matchesRes.ok) {
         console.error("加载对局列表失败:", matchesRes.statusText);
       } else {
@@ -74,7 +83,10 @@ export default function Home() {
           const matchesWithResults = await Promise.all(
             matchesData.data.map(async (match: Match) => {
               try {
-                const resultsRes = await fetch(`/api/matches/${match.id}/results`);
+                const resultsRes = await fetch(
+                  `/api/matches/${match.id}/results`,
+                  { headers: apiHeaders }
+                );
                 if (!resultsRes.ok) {
                   console.error(`加载对局 ${match.id} 成绩失败:`, resultsRes.statusText);
                   return { ...match, results: [] };
