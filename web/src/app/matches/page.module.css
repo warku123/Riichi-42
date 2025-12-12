@@ -36,12 +36,293 @@
   padding: 2rem;
 }
 
-.placeholder {
-  text-align: center;
-  padding: 3rem;
-  color: #999;
+.card {
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.formRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.formRow label {
+  font-weight: 600;
+  color: #333;
+}
+
+.formRow input,
+.formRow select {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.select {
+  position: relative;
+}
+
+.selectControl {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  background: white;
+}
+
+.selectDisabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.selectPlaceholder {
+  color: #999;
+}
+
+.selectValue {
+  color: #111;
+}
+
+.selectArrow {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.selectDropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  z-index: 10;
+  max-height: 220px;
+  display: flex;
+  flex-direction: column;
+}
+
+.selectSearch {
+  padding: 0.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.selectSearch input {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.selectOptions {
+  overflow-y: auto;
+  max-height: 160px;
+}
+
+.selectOption {
+  padding: 0.65rem 0.75rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.selectOption:hover {
+  background: #f5f5f5;
+}
+
+.selectOptionEmpty {
+  padding: 0.65rem 0.75rem;
+  color: #999;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.seatCard {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 1rem;
+  background: #fafafa;
+}
+
+.seatHeader {
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.message {
+  padding: 0.75rem;
+  background: #f5f0ff;
+  border: 1px solid #e0d8ff;
+  color: #4b3f8f;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.actions button,
+.secondaryButton {
+  padding: 0.75rem 1.5rem;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.secondaryButton {
+  background: #f0f0f0;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+.actions button:hover:not(:disabled) {
+  background: #5568d3;
+}
+
+.actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.filters {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+}
+
+.filters label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.placeholder {
+  text-align: center;
+  padding: 2rem;
+  color: #999;
+}
+
+.matchList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.matchCard {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 1rem;
+  background: #fafafa;
+}
+
+.matchHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.matchTitle {
+  font-weight: 700;
+}
+
+.matchMeta {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.matchActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.deleteButton {
+  padding: 0.6rem 0.9rem;
+  background: #fef2f2;
+  color: #c0392b;
+  border: 1px solid #f5c2c0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.deleteButton:hover:not(:disabled) {
+  background: #fde3e3;
+  border-color: #f1a7a5;
+}
+
+.deleteButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 0.6rem;
+  border-bottom: 1px solid #f0f0f0;
+  text-align: left;
+}
+
+.table th {
+  background: #f8f8f8;
+  font-weight: 600;
+  color: #555;
+}
+
+@media (max-width: 768px) {
+  .filters {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .matchHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 

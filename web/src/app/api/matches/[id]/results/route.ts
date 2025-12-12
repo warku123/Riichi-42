@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
+import { computeScores, SeatKey } from '@/lib/score';
 
 // GET /api/matches/[id]/results - 获取某场对局的成绩
 export async function GET(
@@ -76,9 +77,9 @@ export async function POST(
 
     // 验证每个记录的必要字段
     for (const r of results) {
-      if (!r.player_id || !r.seat || !r.points || !r.rank) {
+      if (!r.player_id || !r.seat || !r.points) {
         return NextResponse.json(
-          { error: '每条记录必须包含 player_id, seat, points, rank' },
+          { error: '每条记录必须包含 player_id, seat, points' },
           { status: 400 }
         );
       }
@@ -88,13 +89,16 @@ export async function POST(
           { status: 400 }
         );
       }
-      if (r.rank < 1 || r.rank > 4) {
-        return NextResponse.json(
-          { error: 'rank 必须在 1-4 之间' },
-          { status: 400 }
-        );
-      }
     }
+
+    // 计算名次与分数（同分共享加减分）
+    const computedBySeat = computeScores(
+      results.map((r: any) => ({
+        seat: r.seat as SeatKey,
+        points: Number(r.points),
+        player_id: typeof r.player_id === 'string' ? parseInt(r.player_id) : r.player_id,
+      }))
+    );
 
     // 先删除该对局的旧记录（如果存在）
     const { error: deleteError } = await supabase
@@ -110,12 +114,13 @@ export async function POST(
     }
 
     // 插入新记录
-    const records = results.map(r => ({
+    const records = computedBySeat.map(r => ({
       match_id: matchId,
       player_id: typeof r.player_id === 'string' ? parseInt(r.player_id) : r.player_id,
-      seat: r.seat,
+      seat: r.seat as SeatKey,
       points: r.points,
       rank: r.rank,
+      score: r.score,
     }));
 
     const { data, error } = await supabase
