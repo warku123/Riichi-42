@@ -1,77 +1,247 @@
 .container {
   min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: radial-gradient(circle at 20% 20%, #f7f7ff, #ffffff);
-  padding: 24px;
-  font-family: var(--font-geist-sans);
+  background: #f5f5f5;
 }
 
-.card {
-  width: min(720px, 100%);
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  padding: 32px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+.header {
+  background: white;
+  padding: 1.5rem 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .title {
-  font-size: 28px;
+  font-size: 1.5rem;
   font-weight: 700;
-  margin: 0 0 12px 0;
-  color: #111827;
+  color: #1a1a1a;
+  margin: 0;
 }
 
-.desc {
-  margin: 0 0 24px 0;
-  color: #4b5563;
-  line-height: 1.6;
-}
-
-.button {
-  display: inline-flex;
+.userInfo {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 12px 18px;
-  background: #111827;
-  color: #ffffff;
-  border: none;
-  border-radius: 10px;
-  font-weight: 600;
+  gap: 1rem;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.logoutButton {
+  padding: 0.5rem 1rem;
+  background: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  font-size: 0.9rem;
+  transition: background 0.2s;
 }
 
-.button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 30px rgba(17, 24, 39, 0.18);
+.logoutButton:hover {
+  background: #e0e0e0;
 }
 
-.button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
+.nav {
+  background: white;
+  padding: 1rem 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  display: flex;
+  gap: 1rem;
 }
 
-.status {
-  margin-top: 18px;
-  padding: 12px;
-  border-radius: 10px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  color: #111827;
-  word-break: break-all;
+.navButton {
+  padding: 0.75rem 1.5rem;
+  background: #667eea;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: background 0.2s;
 }
 
-@media (max-width: 640px) {
-  .card {
-    padding: 24px;
+.navButton:hover {
+  background: #5568d3;
+}
+
+.content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.section {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.sectionTitle {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #1a1a1a;
+}
+
+.tableContainer {
+  overflow-x: auto;
+  max-height: 350px;
+  overflow-y: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+}
+
+/* 天梯榜表格容器特殊样式 */
+.section:has(.tableContainer) .tableContainer {
+  max-height: 350px;
+}
+
+.tableContainer::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.tableContainer::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.tableContainer::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.tableContainer::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  background: #f8f9fa;
+  padding: 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 2px solid #e0e0e0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.score {
+  font-weight: 600;
+  color: #667eea;
+}
+
+.empty {
+  text-align: center;
+  color: #999;
+  padding: 2rem;
+}
+
+.matchesContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.matchCard {
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 1rem;
+  background: #fafafa;
+}
+
+.matchHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.matchDate {
+  font-weight: 500;
+  color: #333;
+}
+
+.matchNote {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.matchTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.matchTable th {
+  background: #f0f0f0;
+  padding: 0.5rem;
+  text-align: left;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #666;
+}
+
+.matchTable td {
+  padding: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.chartPlaceholder {
+  padding: 3rem;
+  text-align: center;
+  color: #999;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 2px dashed #ddd;
+}
+
+.loading {
+  text-align: center;
+  padding: 3rem;
+  color: #666;
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
   }
 
-  .title {
-    font-size: 24px;
+  .userInfo {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .nav {
+    flex-direction: column;
+  }
+
+  .content {
+    padding: 1rem;
+  }
+
+  .tableContainer {
+    overflow-x: scroll;
   }
 }
