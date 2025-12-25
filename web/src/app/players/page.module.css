@@ -139,11 +139,13 @@
   color: var(--gray-700);
 }
 
-.deleteButton {
+.rowActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.editButton, .saveButton, .cancelButton {
   padding: 0.4rem 0.8rem;
-  background: #fff;
-  color: #ef4444;
-  border: 1px solid #fee2e2;
   border-radius: 8px;
   cursor: pointer;
   font-size: 0.75rem;
@@ -151,9 +153,50 @@
   transition: all 0.2s;
 }
 
-.deleteButton:hover:not(:disabled) {
-  background: #fef2f2;
-  border-color: #fecaca;
+.editButton {
+  background: #fff;
+  color: var(--gray-900);
+  border: 1px solid var(--gray-200);
+}
+
+.editButton:hover:not(:disabled) {
+  background: var(--gray-50);
+  border-color: var(--gray-900);
+}
+
+.saveButton {
+  background: var(--gray-900);
+  color: #fff;
+  border: none;
+}
+
+.saveButton:hover:not(:disabled) {
+  background: #000;
+}
+
+.cancelButton {
+  background: #fff;
+  color: var(--gray-500);
+  border: 1px solid var(--gray-200);
+}
+
+.cancelButton:hover:not(:disabled) {
+  background: var(--gray-50);
+}
+
+.inlineInput {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--gray-200);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  width: 100%;
+  background: var(--gray-50);
+}
+
+.inlineInput:focus {
+  outline: none;
+  border-color: var(--gray-900);
+  background: #fff;
 }
 
 .placeholder {

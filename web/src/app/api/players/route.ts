@@ -151,3 +151,38 @@ export async function DELETE(request: NextRequest) {
   }
 }
 
+// PATCH /api/players - 修改选手名称，要求 body: { id: number, name: string }
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { id, name } = body;
+    const playerId = typeof id === 'string' ? parseInt(id) : id;
+
+    if (!playerId || Number.isNaN(playerId)) {
+      return NextResponse.json({ error: '无效的选手ID' }, { status: 400 });
+    }
+
+    if (!name || typeof name !== 'string' || name.trim() === '') {
+      return NextResponse.json({ error: '选手名称不能为空' }, { status: 400 });
+    }
+
+    const { data, error } = await supabase
+      .from('players')
+      .update({ name: name.trim() })
+      .eq('id', playerId)
+      .select()
+      .single();
+
+    if (error) {
+      if (error.code === '23505') {
+        return NextResponse.json({ error: '该选手名称已存在' }, { status: 409 });
+      }
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ data });
+  } catch (err) {
+    return NextResponse.json({ error: '服务器错误' }, { status: 500 });
+  }
+}
+

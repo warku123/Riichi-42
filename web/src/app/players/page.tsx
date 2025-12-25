@@ -19,6 +19,8 @@ export default function PlayersPage() {
   const [name, setName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingName, setEditName] = useState("");
 
   const apiHeaders =
     typeof process !== "undefined"
@@ -103,6 +105,34 @@ export default function PlayersPage() {
     }
   };
 
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingId || !editingName.trim()) {
+      setMessage("用户名不能为空");
+      return;
+    }
+    setSubmitting(true);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/players", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...(apiHeaders || {}) },
+        body: JSON.stringify({ id: editingId, name: editingName.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setMessage(data.error || "修改失败");
+      } else {
+        setEditingId(null);
+        await loadPlayers();
+      }
+    } catch (err) {
+      setMessage("修改失败");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   if (!mounted || !isAuthenticated()) {
     return null;
   }
@@ -153,15 +183,51 @@ export default function PlayersPage() {
                 {players.map((p) => (
                   <tr key={p.id}>
                     <td>{p.id}</td>
-                    <td>{p.name}</td>
                     <td>
-                      <button
-                        className={styles.deleteButton}
-                        onClick={() => handleDelete(p.id, p.name)}
-                        disabled={submitting}
-                      >
-                        删除
-                      </button>
+                      {editingId === p.id ? (
+                        <input
+                          type="text"
+                          className={styles.inlineInput}
+                          value={editingName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          autoFocus
+                        />
+                      ) : (
+                        p.name
+                      )}
+                    </td>
+                    <td>
+                      <div className={styles.rowActions}>
+                        {editingId === p.id ? (
+                          <>
+                            <button
+                              className={styles.saveButton}
+                              onClick={handleUpdate}
+                              disabled={submitting}
+                            >
+                              保存
+                            </button>
+                            <button
+                              className={styles.cancelButton}
+                              onClick={() => setEditingId(null)}
+                              disabled={submitting}
+                            >
+                              取消
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            className={styles.editButton}
+                            onClick={() => {
+                              setEditingId(p.id);
+                              setEditName(p.name);
+                            }}
+                            disabled={submitting}
+                          >
+                            修改
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
