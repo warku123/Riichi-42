@@ -446,34 +446,36 @@ export default function MatchesPage() {
           </div>
 
           <form className={styles.form} onSubmit={handleSubmit}>
-            <div className={styles.formRow}>
-              <label>备注</label>
-              <input
-                type="text"
-                placeholder="备注（可选）"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                disabled={submitting}
-              />
-            </div>
-            <div className={styles.formRow}>
-              <label>桌号</label>
-              <input
-                type="text"
-                placeholder="桌号（可选）"
-                value={tableNo}
-                onChange={(e) => setTableNo(e.target.value)}
-                disabled={submitting}
-              />
-            </div>
-            <div className={styles.formRow}>
-              <label>对局时间</label>
-              <input
-                type="datetime-local"
-                value={playedAt}
-                onChange={(e) => setPlayedAt(e.target.value)}
-                disabled={submitting}
-              />
+            <div className={styles.formGrid}>
+              <div className={styles.formRow}>
+                <label>备注</label>
+                <input
+                  type="text"
+                  placeholder="备注（可选）"
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  disabled={submitting}
+                />
+              </div>
+              <div className={styles.formRow}>
+                <label>桌号</label>
+                <input
+                  type="text"
+                  placeholder="桌号（可选）"
+                  value={tableNo}
+                  onChange={(e) => setTableNo(e.target.value)}
+                  disabled={submitting}
+                />
+              </div>
+              <div className={styles.formRow}>
+                <label>对局时间</label>
+                <input
+                  type="datetime-local"
+                  value={playedAt}
+                  onChange={(e) => setPlayedAt(e.target.value)}
+                  disabled={submitting}
+                />
+              </div>
             </div>
 
             <div className={styles.grid}>

@@ -191,8 +191,12 @@ export default function Home() {
                     ) : (
                       leaderboard.map((player, index) => (
                         <tr key={player.player_id}>
-                          <td>{index + 1}</td>
-                          <td>{player.name}</td>
+                          <td>
+                            <span className={`${styles.rankBadge} ${index < 3 ? styles.topRank : ""}`}>
+                              {index + 1}
+                            </span>
+                          </td>
+                          <td style={{ fontWeight: 600 }}>{player.name}</td>
                           <td className={styles.score}>
                             {player.total_score.toFixed(2)}
                           </td>
