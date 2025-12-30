@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from('matches')
-      .select('*')
+      .select('*', { count: 'exact' })
       .order('played_at', { ascending: false });
 
     if (start) {
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
       query = query.lte('played_at', end);
     }
 
-    const { data, error } = await query.range(offset, offset + limit - 1);
+    const { data, error, count } = await query.range(offset, offset + limit - 1);
 
     if (error) {
       return NextResponse.json(
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ data });
+    return NextResponse.json({ data, total: count });
   } catch (err) {
     return NextResponse.json(
       { error: '服务器错误' },

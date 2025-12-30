@@ -146,6 +146,10 @@ export default function MatchesPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const PAGE_SIZE = 10;
+
   const [note, setNote] = useState("");
   const [tableNo, setTableNo] = useState("");
   const [playedAt, setPlayedAt] = useState<string>(() => {
@@ -166,8 +170,14 @@ export default function MatchesPage() {
     N: { player_id: "", points: 25000 },
   });
 
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState(() => {
+    const d = new Date();
+    return d.toISOString().split("T")[0]; // YYYY-MM-DD
+  });
+  const [endDate, setEndDate] = useState(() => {
+    const d = new Date();
+    return d.toISOString().split("T")[0]; // YYYY-MM-DD
+  });
 
   const apiHeaders =
     typeof process !== "undefined"
@@ -203,21 +213,31 @@ export default function MatchesPage() {
     }
   };
 
-  const loadMatches = async () => {
+  const loadMatches = async (targetPage = page) => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      params.set("limit", "20");
-      if (startDate) params.set("start", new Date(startDate).toISOString());
+      params.set("limit", PAGE_SIZE.toString());
+      params.set("offset", ((targetPage - 1) * PAGE_SIZE).toString());
+      
+      if (startDate) {
+        const [y, m, d] = startDate.split("-").map(Number);
+        const start = new Date(y, m - 1, d, 0, 0, 0, 0);
+        params.set("start", start.toISOString());
+      }
+      
       if (endDate) {
-        const end = new Date(endDate);
+        const [y, m, d] = endDate.split("-").map(Number);
+        const end = new Date(y, m - 1, d, 23, 59, 59, 999);
         params.set("end", end.toISOString());
       }
+
       const res = await fetch(`/api/matches?${params.toString()}`, {
         headers: apiHeaders,
       });
       const data = await res.json();
       if (data.data) {
+        setTotal(data.total || 0);
         const matchesData: Match[] = data.data;
         const matchesWithResults = await Promise.all(
           matchesData.map(async (m) => {
@@ -415,6 +435,16 @@ export default function MatchesPage() {
     }
   };
 
+  const handleSearch = () => {
+    setPage(1);
+    loadMatches(1);
+  };
+
+  const handlePageChange = (p: number) => {
+    setPage(p);
+    loadMatches(p);
+  };
+
   if (!mounted || !isAuthenticated()) {
     return null;
   }
@@ -537,7 +567,7 @@ export default function MatchesPage() {
           <div className={styles.cardHeader}>
             <h2 className={styles.sectionTitle}>对局列表</h2>
             <div className={styles.filters}>
-              <div>
+              <div className={styles.filterGroup}>
                 <label>开始日期</label>
                 <input
                   type="date"
@@ -545,7 +575,7 @@ export default function MatchesPage() {
                   onChange={(e) => setStartDate(e.target.value)}
                 />
               </div>
-              <div>
+              <div className={styles.filterGroup}>
                 <label>结束日期</label>
                 <input
                   type="date"
@@ -553,8 +583,12 @@ export default function MatchesPage() {
                   onChange={(e) => setEndDate(e.target.value)}
                 />
               </div>
-              <button onClick={loadMatches} disabled={loading || submitting}>
-                筛选
+              <button 
+                className={styles.filterButton}
+                onClick={handleSearch} 
+                disabled={loading || submitting}
+              >
+                {loading ? "搜索中..." : "筛选对局"}
               </button>
             </div>
           </div>
@@ -564,61 +598,83 @@ export default function MatchesPage() {
           ) : matches.length === 0 ? (
             <div className={styles.placeholder}>暂无对局</div>
           ) : (
-            <div className={styles.matchList}>
-              {matches.map((m) => (
-                <div key={m.id} className={styles.matchCard}>
-                  <div className={styles.matchHeader}>
-                    <div>
-                      <div className={styles.matchTitle}>
-                        对局 #{m.id} {m.note ? `- ${m.note}` : ""}
+            <>
+              <div className={styles.matchList}>
+                {matches.map((m) => (
+                  <div key={m.id} className={styles.matchCard}>
+                    <div className={styles.matchHeader}>
+                      <div>
+                        <div className={styles.matchTitle}>
+                          对局 #{m.id} {m.note ? `- ${m.note}` : ""}
+                        </div>
+                        <div className={styles.matchMeta}>
+                          {new Date(m.played_at).toLocaleString("zh-CN")}{" "}
+                          {m.table_no ? `| 桌号 ${m.table_no}` : ""}
+                        </div>
                       </div>
-                      <div className={styles.matchMeta}>
-                        {new Date(m.played_at).toLocaleString("zh-CN")}{" "}
-                        {m.table_no ? `| 桌号 ${m.table_no}` : ""}
+                      <div className={styles.matchActions}>
+                        <button
+                          className={styles.secondaryButton}
+                          onClick={() => handleEdit(m)}
+                          disabled={submitting}
+                        >
+                          编辑
+                        </button>
+                        <button
+                          className={styles.deleteButton}
+                          onClick={() => handleDelete(m.id)}
+                          disabled={submitting}
+                        >
+                          删除
+                        </button>
                       </div>
                     </div>
-                    <div className={styles.matchActions}>
-                      <button
-                        className={styles.secondaryButton}
-                        onClick={() => handleEdit(m)}
-                        disabled={submitting}
-                      >
-                        编辑
-                      </button>
-                      <button
-                        className={styles.deleteButton}
-                        onClick={() => handleDelete(m.id)}
-                        disabled={submitting}
-                      >
-                        删除
-                      </button>
-                    </div>
-                  </div>
-                  <table className={styles.table}>
-                    <thead>
-                      <tr>
-                        <th>座位</th>
-                        <th>玩家</th>
-                        <th>名次</th>
-                        <th>点数</th>
-                        <th>得分</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {(m.results || []).map((r) => (
-                        <tr key={`${m.id}-${r.seat}`}>
-                          <td>{r.seat}</td>
-                          <td>{r.player.name}</td>
-                          <td>{r.rank}</td>
-                          <td>{r.points}</td>
-                          <td>{r.score?.toFixed(2)}</td>
+                    <table className={styles.table}>
+                      <thead>
+                        <tr>
+                          <th>座位</th>
+                          <th>玩家</th>
+                          <th>名次</th>
+                          <th>点数</th>
+                          <th>得分</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {(m.results || []).map((r) => (
+                          <tr key={`${m.id}-${r.seat}`}>
+                            <td>{r.seat}</td>
+                            <td>{r.player.name}</td>
+                            <td>{r.rank}</td>
+                            <td>{r.points}</td>
+                            <td>{r.score?.toFixed(2)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ))}
+              </div>
+
+              {total > PAGE_SIZE && (
+                <div className={styles.pagination}>
+                  <button
+                    disabled={page === 1 || loading}
+                    onClick={() => handlePageChange(page - 1)}
+                  >
+                    上一页
+                  </button>
+                  <span className={styles.pageInfo}>
+                    第 {page} / {Math.ceil(total / PAGE_SIZE)} 页 (共 {total} 条)
+                  </span>
+                  <button
+                    disabled={page >= Math.ceil(total / PAGE_SIZE) || loading}
+                    onClick={() => handlePageChange(page + 1)}
+                  >
+                    下一页
+                  </button>
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
         </section>
       </div>
