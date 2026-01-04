@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { isAuthenticated, logout, getUsername } from "@/lib/auth";
@@ -37,6 +37,7 @@ export default function Home() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [leaderboard, setLeaderboard] = useState<PlayerTotal[]>([]);
+  const [sortMode, setSortMode] = useState<"total" | "avg">("total");
   const [recentMatches, setRecentMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -53,6 +54,31 @@ export default function Home() {
     }
     loadData();
   }, [router]);
+
+  const sortedLeaderboard = useMemo(() => {
+    const data = [...leaderboard];
+    if (sortMode === "total") {
+      return data.sort((a, b) => b.total_score - a.total_score);
+    } else {
+      // 均分排序：至少10场的人排在前面
+      return data.sort((a, b) => {
+        const aHas10 = a.match_count >= 10;
+        const bHas10 = b.match_count >= 10;
+        
+        if (aHas10 && !bHas10) return -1;
+        if (!aHas10 && bHas10) return 1;
+        
+        if (aHas10 && bHas10) {
+          const aAvg = a.total_score / a.match_count;
+          const bAvg = b.total_score / b.match_count;
+          return bAvg - aAvg;
+        }
+        
+        // 都没有10场则按场次排
+        return b.match_count - a.match_count;
+      });
+    }
+  }, [leaderboard, sortMode]);
 
   const loadData = async () => {
     try {
@@ -172,7 +198,23 @@ export default function Home() {
         ) : (
           <>
             <section className={styles.section}>
-              <h2 className={styles.sectionTitle}>分数天梯榜</h2>
+              <div className={styles.sectionHeader}>
+                <h2 className={styles.sectionTitle}>分数天梯榜</h2>
+                <div className={styles.sortToggle}>
+                  <button 
+                    className={`${styles.sortButton} ${sortMode === "total" ? styles.activeSort : ""}`}
+                    onClick={() => setSortMode("total")}
+                  >
+                    总分
+                  </button>
+                  <button 
+                    className={`${styles.sortButton} ${sortMode === "avg" ? styles.activeSort : ""}`}
+                    onClick={() => setSortMode("avg")}
+                  >
+                    均分
+                  </button>
+                </div>
+              </div>
               <div className={styles.tableContainer}>
                 <table className={styles.table}>
                   <thead>
@@ -185,14 +227,14 @@ export default function Home() {
                     </tr>
                   </thead>
                   <tbody>
-                    {leaderboard.length === 0 ? (
+                    {sortedLeaderboard.length === 0 ? (
                       <tr>
                         <td colSpan={5} className={styles.empty}>
                           暂无数据
                         </td>
                       </tr>
                     ) : (
-                      leaderboard.map((player, index) => (
+                      sortedLeaderboard.map((player, index) => (
                         <tr key={player.player_id}>
                           <td>
                             <span className={`${styles.rankBadge} ${index < 3 ? styles.topRank : ""}`}>
