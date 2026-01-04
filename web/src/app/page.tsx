@@ -10,6 +10,7 @@ interface PlayerTotal {
   player_id: number;
   name: string;
   total_score: number;
+  match_count: number;
 }
 
 interface MatchResult {
@@ -178,13 +179,15 @@ export default function Home() {
                     <tr>
                       <th>排名</th>
                       <th>选手</th>
+                      <th>场次</th>
                       <th>总分</th>
+                      <th>均分</th>
                     </tr>
                   </thead>
                   <tbody>
                     {leaderboard.length === 0 ? (
                       <tr>
-                        <td colSpan={3} className={styles.empty}>
+                        <td colSpan={5} className={styles.empty}>
                           暂无数据
                         </td>
                       </tr>
@@ -197,8 +200,14 @@ export default function Home() {
                             </span>
                           </td>
                           <td style={{ fontWeight: 600 }}>{player.name}</td>
+                          <td className={styles.matchCount}>{player.match_count || 0}</td>
                           <td className={styles.score}>
-                            {player.total_score.toFixed(2)}
+                            {(player.total_score || 0).toFixed(2)}
+                          </td>
+                          <td className={styles.avgScore}>
+                            {player.match_count >= 10 
+                              ? ((player.total_score || 0) / player.match_count).toFixed(2)
+                              : "-"}
                           </td>
                         </tr>
                       ))

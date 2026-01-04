@@ -85,8 +85,14 @@
   margin: 0 auto;
   padding: 2rem;
   display: grid;
-  grid-template-columns: 350px 1fr;
+  grid-template-columns: 450px 1fr;
   gap: 2rem;
+}
+
+.matchCount, .avgScore {
+  font-variant-numeric: tabular-nums;
+  color: var(--gray-500) !important;
+  font-weight: 500;
 }
 
 .section {
