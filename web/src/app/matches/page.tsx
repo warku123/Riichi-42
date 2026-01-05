@@ -445,6 +445,32 @@ export default function MatchesPage() {
     loadMatches(p);
   };
 
+  const handleCopy = (match: Match) => {
+    const seatNames: Record<string, string> = {
+      E: "东",
+      S: "南",
+      W: "西",
+      N: "北",
+    };
+
+    const sortedResults = [...(match.results || [])].sort((a, b) => a.rank - b.rank);
+    const dateStr = new Date(match.played_at).toLocaleString("zh-CN");
+    
+    let text = `对局 #${match.id}${match.note ? ` (${match.note})` : ""}\n`;
+    text += `时间: ${dateStr}\n`;
+    
+    sortedResults.forEach((r) => {
+      text += `${r.rank}位: ${r.player.name} (${r.points}) [${seatNames[r.seat] || r.seat}]\n`;
+    });
+
+    navigator.clipboard.writeText(text).then(() => {
+      alert("对局结果已复制到剪贴板");
+    }).catch(err => {
+      console.error("复制失败", err);
+      alert("复制失败，请手动选择复制");
+    });
+  };
+
   if (!mounted || !isAuthenticated()) {
     return null;
   }
@@ -613,6 +639,13 @@ export default function MatchesPage() {
                         </div>
                       </div>
                       <div className={styles.matchActions}>
+                        <button
+                          className={styles.copyButton}
+                          onClick={() => handleCopy(m)}
+                          disabled={submitting}
+                        >
+                          复制
+                        </button>
                         <button
                           className={styles.secondaryButton}
                           onClick={() => handleEdit(m)}

@@ -335,6 +335,25 @@
   border-radius: 8px;
   font-size: 0.8125rem;
   font-weight: 600;
+  cursor: pointer;
+}
+
+.copyButton {
+  padding: 0.5rem 1rem;
+  background: white;
+  color: var(--gray-700);
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.copyButton:hover {
+  background: var(--gray-50);
+  border-color: var(--gray-900);
+  color: var(--gray-900);
 }
 
 .table {
