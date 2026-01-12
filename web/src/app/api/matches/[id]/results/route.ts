@@ -75,9 +75,10 @@ export async function POST(
       );
     }
 
-    // 验证每个记录的必要字段
+    // 验证每个记录的必要字段并检查玩家重复
+    const playerIds = new Set();
     for (const r of results) {
-      if (!r.player_id || !r.seat || !r.points) {
+      if (r.player_id === undefined || r.player_id === null || !r.seat || r.points === undefined || r.points === null) {
         return NextResponse.json(
           { error: '每条记录必须包含 player_id, seat, points' },
           { status: 400 }
@@ -89,6 +90,13 @@ export async function POST(
           { status: 400 }
         );
       }
+      if (playerIds.has(r.player_id)) {
+        return NextResponse.json(
+          { error: '同一场对局中玩家不能重复' },
+          { status: 400 }
+        );
+      }
+      playerIds.add(r.player_id);
     }
 
     // 计算名次与分数（同分共享加减分）
