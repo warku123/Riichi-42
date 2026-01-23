@@ -3,6 +3,16 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  ReferenceLine,
+} from "recharts";
 import { isAuthenticated, logout, getUsername } from "@/lib/auth";
 import styles from "./page.module.css";
 
@@ -11,6 +21,113 @@ interface PlayerTotal {
   name: string;
   total_score: number;
   match_count: number;
+}
+
+interface Player {
+  id: number;
+  name: string;
+}
+
+interface MatchHistory {
+  match_id: number;
+  played_at: string;
+  rank: number;
+  score: number;
+  points: number;
+  seat: string;
+}
+
+interface Option {
+  value: number;
+  label: string;
+}
+
+// 可搜索下拉选择组件
+function SearchableSelect({
+  options,
+  value,
+  onChange,
+  placeholder,
+}: {
+  options: Option[];
+  value: number | "";
+  onChange: (val: number | "") => void;
+  placeholder?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [keyword, setKeyword] = useState("");
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  const filtered = useMemo(() => {
+    if (!keyword.trim()) return options;
+    const lower = keyword.toLowerCase();
+    return options.filter((o) => o.label.toLowerCase().includes(lower));
+  }, [options, keyword]);
+
+  const selected = options.find((o) => o.value === value);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  useEffect(() => {
+    if (!open) setKeyword("");
+  }, [open]);
+
+  return (
+    <div className={styles.select} ref={ref}>
+      <div
+        className={styles.selectControl}
+        onClick={() => setOpen((v) => !v)}
+      >
+        {selected ? (
+          <span className={styles.selectValue}>{selected.label}</span>
+        ) : (
+          <span className={styles.selectPlaceholder}>
+            {placeholder || "请选择"}
+          </span>
+        )}
+        <span className={styles.selectArrow}>{open ? "▲" : "▼"}</span>
+      </div>
+      {open && (
+        <div className={styles.selectDropdown}>
+          <div className={styles.selectSearch}>
+            <input
+              type="text"
+              placeholder="搜索..."
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              autoFocus
+            />
+          </div>
+          <div className={styles.selectOptions}>
+            {filtered.length === 0 ? (
+              <div className={styles.selectOptionEmpty}>暂无匹配</div>
+            ) : (
+              filtered.map((o) => (
+                <div
+                  key={o.value}
+                  className={styles.selectOption}
+                  onClick={() => {
+                    onChange(o.value);
+                    setOpen(false);
+                  }}
+                >
+                  {o.label}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 interface MatchResult {
@@ -59,6 +176,12 @@ export default function Home() {
   const [newSeasonName, setNewSeasonName] = useState("");
   const [newSeasonStartDate, setNewSeasonStartDate] = useState("");
   
+  // 图表相关状态
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [selectedPlayerId, setSelectedPlayerId] = useState<number | "">("");
+  const [historyData, setHistoryData] = useState<MatchHistory[]>([]);
+  const [chartLoading, setChartLoading] = useState(false);
+  
   // 用于防止初始化时重复加载
   const initializedRef = useRef(false);
   const seasonsRef = useRef<Season[]>([]);
@@ -74,12 +197,24 @@ export default function Home() {
     if (initializedRef.current) return;
     initializedRef.current = true;
     
-    // 加载赛季列表
+    // 加载赛季列表和玩家列表
     const initData = async () => {
       try {
-        const res = await fetch("/api/seasons", { headers: apiHeaders });
-        if (res.ok) {
-          const data = await res.json();
+        // 并行加载赛季和玩家列表
+        const [seasonsRes, playersRes] = await Promise.all([
+          fetch("/api/seasons", { headers: apiHeaders }),
+          fetch("/api/players", { headers: apiHeaders }),
+        ]);
+        
+        // 处理玩家列表
+        if (playersRes.ok) {
+          const playersData = await playersRes.json();
+          setPlayers(playersData.data || []);
+        }
+        
+        // 处理赛季列表
+        if (seasonsRes.ok) {
+          const data = await seasonsRes.json();
           const seasonsList = data.data || [];
           setSeasons(seasonsList);
           seasonsRef.current = seasonsList;
@@ -99,7 +234,7 @@ export default function Home() {
           loadData("all", []);
         }
       } catch (err) {
-        console.error("加载赛季列表失败:", err);
+        console.error("加载数据失败:", err);
         loadData("all", []);
       }
     };
@@ -228,7 +363,63 @@ export default function Home() {
   const handleSeasonChange = (newSeasonId: number | "all") => {
     setSelectedSeasonId(newSeasonId);
     loadData(newSeasonId, seasonsRef.current);
+    // 如果已选择了玩家，重新加载该玩家的图表数据
+    if (selectedPlayerId !== "") {
+      loadPlayerHistory(selectedPlayerId, newSeasonId);
+    }
   };
+
+  // 加载玩家历史数据
+  const loadPlayerHistory = async (playerId: number, seasonId: number | "all" = selectedSeasonId) => {
+    setChartLoading(true);
+    try {
+      const { start, end } = getSeasonTimeRange(seasonId, seasonsRef.current);
+      const params = new URLSearchParams();
+      params.set("player_id", String(playerId));
+      params.set("limit", "10");
+      if (start) params.set("start", start);
+      if (end) params.set("end", end);
+
+      const res = await fetch(`/api/stats/player-history?${params}`, {
+        headers: apiHeaders,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setHistoryData(data.data || []);
+      }
+    } catch (err) {
+      console.error("加载玩家历史失败:", err);
+    } finally {
+      setChartLoading(false);
+    }
+  };
+
+  // 玩家选择变化
+  const handlePlayerChange = (playerId: number | "") => {
+    setSelectedPlayerId(playerId);
+    if (playerId !== "") {
+      loadPlayerHistory(playerId);
+    } else {
+      setHistoryData([]);
+    }
+  };
+
+  // 获取选中玩家的名字
+  const selectedPlayerName = players.find(p => p.id === selectedPlayerId)?.name || "";
+
+  // 玩家选项（用于 SearchableSelect）
+  const playerOptions: Option[] = players.map((p) => ({
+    value: p.id,
+    label: p.name,
+  }));
+
+  // 图表数据
+  const chartData = historyData.map((item, index) => ({
+    name: `第${index + 1}场`,
+    date: new Date(item.played_at).toLocaleDateString("zh-CN", { month: "numeric", day: "numeric" }),
+    rank: item.rank,
+    score: item.score,
+  }));
 
   // 创建新赛季
   const handleCreateSeason = async () => {
@@ -469,10 +660,133 @@ export default function Home() {
               </div>
             </section>
 
-            <section className={styles.section}>
-              <h2 className={styles.sectionTitle}>统计图表</h2>
-              <div className={styles.chartPlaceholder}>
-                <p>统计图表功能开发中...</p>
+            <section className={styles.chartSection}>
+              <div className={styles.sectionHeader}>
+                <h2 className={styles.sectionTitle}>近10场数据统计</h2>
+                <div className={styles.playerSelector}>
+                  <label>选择玩家：</label>
+                  <SearchableSelect
+                    options={playerOptions}
+                    value={selectedPlayerId}
+                    onChange={handlePlayerChange}
+                    placeholder="请选择玩家"
+                  />
+                </div>
+              </div>
+
+              <div className={styles.chartContainer}>
+                {selectedPlayerId === "" ? (
+                  <div className={styles.chartPlaceholder}>
+                    <p>请选择一个玩家查看名次走势</p>
+                  </div>
+                ) : chartLoading ? (
+                  <div className={styles.chartPlaceholder}>
+                    <p>加载中...</p>
+                  </div>
+                ) : historyData.length === 0 ? (
+                  <div className={styles.chartPlaceholder}>
+                    <p>该玩家在当前赛季暂无对局记录</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className={styles.chartInfo}>
+                      <span className={styles.playerName}>{selectedPlayerName}</span>
+                      <span className={styles.chartHint}>
+                        近 {historyData.length} 场对局
+                      </span>
+                    </div>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart
+                        data={chartData}
+                        margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--gray-200)" />
+                        <XAxis
+                          dataKey="date"
+                          tick={{ fill: "var(--gray-500)", fontSize: 12 }}
+                          axisLine={{ stroke: "var(--gray-300)" }}
+                        />
+                        <YAxis
+                          domain={[1, 4]}
+                          ticks={[1, 2, 3, 4]}
+                          reversed
+                          tick={{ fill: "var(--gray-500)", fontSize: 12 }}
+                          axisLine={{ stroke: "var(--gray-300)" }}
+                          label={{
+                            value: "名次",
+                            angle: -90,
+                            position: "insideLeft",
+                            fill: "var(--gray-500)",
+                            fontSize: 12,
+                          }}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            background: "var(--background)",
+                            border: "1px solid var(--gray-200)",
+                            borderRadius: "8px",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                          }}
+                          formatter={(value: number) => [`第 ${value} 名`, "名次"]}
+                          labelFormatter={(label) => `日期: ${label}`}
+                        />
+                        <ReferenceLine
+                          y={2.5}
+                          stroke="var(--gray-300)"
+                          strokeDasharray="5 5"
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="rank"
+                          stroke="var(--gray-900)"
+                          strokeWidth={2}
+                          dot={{
+                            fill: "var(--gray-900)",
+                            strokeWidth: 2,
+                            r: 5,
+                          }}
+                          activeDot={{
+                            r: 7,
+                            fill: "var(--gray-900)",
+                          }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+
+                    {/* 统计卡片 */}
+                    <div className={styles.statsGrid}>
+                      <div className={styles.statCard}>
+                        <span className={styles.statLabel}>平均名次</span>
+                        <span className={styles.statValue}>
+                          {(
+                            historyData.reduce((sum, h) => sum + h.rank, 0) /
+                            historyData.length
+                          ).toFixed(2)}
+                        </span>
+                      </div>
+                      <div className={styles.statCard}>
+                        <span className={styles.statLabel}>总得分</span>
+                        <span className={styles.statValue}>
+                          {historyData
+                            .reduce((sum, h) => sum + h.score, 0)
+                            .toFixed(2)}
+                        </span>
+                      </div>
+                      <div className={styles.statCard}>
+                        <span className={styles.statLabel}>第一次数</span>
+                        <span className={styles.statValue}>
+                          {historyData.filter((h) => h.rank === 1).length}
+                        </span>
+                      </div>
+                      <div className={styles.statCard}>
+                        <span className={styles.statLabel}>第四次数</span>
+                        <span className={styles.statValue}>
+                          {historyData.filter((h) => h.rank === 4).length}
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </section>
           </>
