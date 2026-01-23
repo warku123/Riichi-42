@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { isAuthenticated, logout, getUsername } from "@/lib/auth";
@@ -33,6 +33,17 @@ interface Match {
   results?: MatchResult[];
 }
 
+interface Season {
+  id: number;
+  name: string;
+  start_date: string;
+  end_date: string | null;
+  is_active: boolean;
+}
+
+// API headers 定义在组件外部，避免每次渲染重新创建
+const apiHeaders = { "x-api-key": process.env.NEXT_PUBLIC_API_SECRET ?? "" };
+
 export default function Home() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
@@ -40,19 +51,60 @@ export default function Home() {
   const [sortMode, setSortMode] = useState<"total" | "avg">("total");
   const [recentMatches, setRecentMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // 赛季相关状态
+  const [seasons, setSeasons] = useState<Season[]>([]);
+  const [selectedSeasonId, setSelectedSeasonId] = useState<number | "all">("all");
+  const [showSeasonModal, setShowSeasonModal] = useState(false);
+  const [newSeasonName, setNewSeasonName] = useState("");
+  const [newSeasonStartDate, setNewSeasonStartDate] = useState("");
+  
+  // 用于防止初始化时重复加载
+  const initializedRef = useRef(false);
+  const seasonsRef = useRef<Season[]>([]);
 
-  const apiHeaders =
-    typeof process !== "undefined"
-      ? { "x-api-key": process.env.NEXT_PUBLIC_API_SECRET ?? "" }
-      : undefined;
-
+  // 初始化
   useEffect(() => {
     setMounted(true);
     if (!isAuthenticated()) {
       router.push("/login");
       return;
     }
-    loadData();
+    
+    if (initializedRef.current) return;
+    initializedRef.current = true;
+    
+    // 加载赛季列表
+    const initData = async () => {
+      try {
+        const res = await fetch("/api/seasons", { headers: apiHeaders });
+        if (res.ok) {
+          const data = await res.json();
+          const seasonsList = data.data || [];
+          setSeasons(seasonsList);
+          seasonsRef.current = seasonsList;
+          
+          // 默认选中当前活跃赛季
+          const activeSeason = seasonsList.find((s: Season) => s.is_active);
+          if (activeSeason) {
+            setSelectedSeasonId(activeSeason.id);
+            // 加载活跃赛季的数据
+            loadData(activeSeason.id, seasonsList);
+          } else {
+            // 没有活跃赛季，加载全部数据
+            loadData("all", seasonsList);
+          }
+        } else {
+          // 加载失败，也加载全部数据
+          loadData("all", []);
+        }
+      } catch (err) {
+        console.error("加载赛季列表失败:", err);
+        loadData("all", []);
+      }
+    };
+    
+    initData();
   }, [router]);
 
   const sortedLeaderboard = useMemo(() => {
@@ -80,10 +132,35 @@ export default function Home() {
     }
   }, [leaderboard, sortMode]);
 
-  const loadData = async () => {
+  // 获取赛季时间范围
+  const getSeasonTimeRange = (seasonId: number | "all", seasonsList: Season[]) => {
+    if (seasonId === "all") {
+      return { start: undefined, end: undefined };
+    }
+    const season = seasonsList.find(s => s.id === seasonId);
+    if (!season) {
+      return { start: undefined, end: undefined };
+    }
+    return {
+      start: season.start_date,
+      end: season.end_date || undefined
+    };
+  };
+
+  // 加载数据（天梯榜 + 最近对局）
+  const loadData = async (seasonId: number | "all", seasonsList: Season[]) => {
     try {
+      setLoading(true);
+      const { start, end } = getSeasonTimeRange(seasonId, seasonsList);
+
+      // 构建天梯榜查询参数
+      const statsParams = new URLSearchParams();
+      if (start) statsParams.set("start", start);
+      if (end) statsParams.set("end", end);
+      const statsUrl = `/api/stats/totals${statsParams.toString() ? `?${statsParams}` : ""}`;
+
       // 加载天梯榜
-      const leaderboardRes = await fetch("/api/stats/totals", {
+      const leaderboardRes = await fetch(statsUrl, {
         headers: apiHeaders,
       });
       if (!leaderboardRes.ok) {
@@ -97,8 +174,14 @@ export default function Home() {
         }
       }
 
+      // 构建对局查询参数
+      const matchParams = new URLSearchParams();
+      matchParams.set("limit", "5");
+      if (start) matchParams.set("start", start);
+      if (end) matchParams.set("end", end);
+
       // 加载最近5场对局
-      const matchesRes = await fetch("/api/matches?limit=5", {
+      const matchesRes = await fetch(`/api/matches?${matchParams}`, {
         headers: apiHeaders,
       });
       if (!matchesRes.ok) {
@@ -138,6 +221,62 @@ export default function Home() {
       console.error("加载数据失败:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 赛季切换时重新加载数据
+  const handleSeasonChange = (newSeasonId: number | "all") => {
+    setSelectedSeasonId(newSeasonId);
+    loadData(newSeasonId, seasonsRef.current);
+  };
+
+  // 创建新赛季
+  const handleCreateSeason = async () => {
+    if (!newSeasonName.trim() || !newSeasonStartDate) {
+      alert("请填写赛季名称和开始时间");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/seasons", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...apiHeaders,
+        },
+        body: JSON.stringify({
+          name: newSeasonName.trim(),
+          start_date: new Date(newSeasonStartDate).toISOString(),
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setShowSeasonModal(false);
+        setNewSeasonName("");
+        setNewSeasonStartDate("");
+        
+        // 重新加载赛季列表
+        const seasonsRes = await fetch("/api/seasons", { headers: apiHeaders });
+        if (seasonsRes.ok) {
+          const seasonsData = await seasonsRes.json();
+          const newSeasonsList = seasonsData.data || [];
+          setSeasons(newSeasonsList);
+          seasonsRef.current = newSeasonsList;
+          
+          // 自动切换到新赛季
+          if (data.data?.id) {
+            setSelectedSeasonId(data.data.id);
+            loadData(data.data.id, newSeasonsList);
+          }
+        }
+      } else {
+        const error = await res.json();
+        alert("创建赛季失败: " + (error.error || "未知错误"));
+      }
+    } catch (err) {
+      console.error("创建赛季失败:", err);
+      alert("创建赛季失败");
     }
   };
 
@@ -184,12 +323,35 @@ export default function Home() {
       </header>
 
       <nav className={styles.nav}>
-        <Link href="/matches" className={styles.navButton}>
-          对局记录修改
-        </Link>
-        <Link href="/players" className={styles.navButton}>
-          用户管理
-        </Link>
+        <div className={styles.navLinks}>
+          <Link href="/matches" className={styles.navButton}>
+            对局记录修改
+          </Link>
+          <Link href="/players" className={styles.navButton}>
+            用户管理
+          </Link>
+        </div>
+        <div className={styles.seasonSelector}>
+          <label className={styles.seasonLabel}>赛季：</label>
+          <select
+            value={selectedSeasonId}
+            onChange={(e) => handleSeasonChange(e.target.value === "all" ? "all" : Number(e.target.value))}
+            className={styles.seasonSelect}
+          >
+            <option value="all">全部数据</option>
+            {seasons.map((season) => (
+              <option key={season.id} value={season.id}>
+                {season.name}{season.is_active ? " (当前)" : ""}
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={() => setShowSeasonModal(true)}
+            className={styles.seasonManageButton}
+          >
+            赛季管理
+          </button>
+        </div>
       </nav>
 
       <div className={styles.content}>
@@ -316,6 +478,86 @@ export default function Home() {
           </>
         )}
       </div>
-    </main>
+
+      {/* 赛季管理弹窗 */}
+      {showSeasonModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowSeasonModal(false)}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3>赛季管理</h3>
+              <button 
+                onClick={() => setShowSeasonModal(false)}
+                className={styles.modalClose}
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className={styles.modalContent}>
+              {/* 创建新赛季 */}
+              <div className={styles.createSeasonForm}>
+                <h4>创建新赛季</h4>
+                <p className={styles.formHint}>
+                  创建新赛季会自动结束当前活跃的赛季
+                </p>
+                <div className={styles.formRow}>
+                  <input
+                    type="text"
+                    placeholder="赛季名称（如：S2 - 2026春季赛）"
+                    value={newSeasonName}
+                    onChange={(e) => setNewSeasonName(e.target.value)}
+                    className={styles.input}
+                  />
+                </div>
+                <div className={styles.formRow}>
+                  <input
+                    type="datetime-local"
+                    value={newSeasonStartDate}
+                    onChange={(e) => setNewSeasonStartDate(e.target.value)}
+                    className={styles.input}
+                  />
+                </div>
+                <button
+                  onClick={handleCreateSeason}
+                  className={styles.createButton}
+                >
+                  创建新赛季
+                </button>
+              </div>
+
+              {/* 赛季列表 */}
+              <div className={styles.seasonList}>
+                <h4>赛季列表</h4>
+                {seasons.length === 0 ? (
+                  <p className={styles.emptyHint}>暂无赛季</p>
+                ) : (
+                  <ul className={styles.seasonItems}>
+                    {seasons.map((season) => (
+                      <li key={season.id} className={styles.seasonItem}>
+                        <div className={styles.seasonInfo}>
+                          <span className={styles.seasonName}>
+                            {season.name}
+                            {season.is_active && (
+                              <span className={styles.activeBadge}>当前</span>
+                            )}
+                          </span>
+                          <span className={styles.seasonDate}>
+                            {new Date(season.start_date).toLocaleDateString("zh-CN")}
+                            {" - "}
+                            {season.end_date 
+                              ? new Date(season.end_date).toLocaleDateString("zh-CN")
+                              : "至今"}
+                          </span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      </main>
   );
 }
