@@ -223,6 +223,7 @@ export default function OverviewPage() {
   const chartData = useMemo(
     () =>
       lastTenHistory.map((item, index) => ({
+        matchKey: `${item.played_at}-${item.match_id}`,
         name: `第${index + 1}场`,
         date: new Date(item.played_at).toLocaleDateString("zh-CN", {
           month: "numeric",
@@ -379,10 +380,11 @@ export default function OverviewPage() {
                         >
                           <CartesianGrid strokeDasharray="3 3" stroke="var(--border-soft)" />
                           <XAxis
-                            dataKey="date"
+                            dataKey="matchKey"
                             tick={{ fill: "var(--ink-secondary)", fontSize: 12 }}
                             axisLine={{ stroke: "var(--border)" }}
                             tickLine={false}
+                            tickFormatter={(_, index) => chartData[index]?.date ?? ""}
                           />
                           <YAxis
                             domain={[1, 4]}
@@ -408,7 +410,11 @@ export default function OverviewPage() {
                               fontSize: "0.875rem",
                             }}
                             formatter={(value) => [`第 ${value} 名`, "名次"]}
-                            labelFormatter={(label) => `日期: ${label}`}
+                            labelFormatter={(_, payload) => {
+                              const point = payload?.[0]?.payload;
+                              if (!point) return "";
+                              return `${point.date} · ${point.name}`;
+                            }}
                           />
                           <ReferenceLine y={2.5} stroke="var(--border-strong)" strokeDasharray="5 5" />
                           <Line
