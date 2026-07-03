@@ -9,6 +9,40 @@ import styles from "./page.module.css";
 interface Player {
   id: number;
   name: string;
+  avatar_url?: string | null;
+}
+
+const AVATAR_MAX_SIZE = 2 * 1024 * 1024; // 2MB
+const AVATAR_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
+
+function PlayerAvatar({
+  name,
+  url,
+  size = 44,
+}: {
+  name: string;
+  url?: string | null;
+  size?: number;
+}) {
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const initial = (name || "?").charAt(0).toUpperCase() || "?";
+  if (url && failedUrl !== url) {
+    return (
+      <img
+        src={url}
+        alt={name}
+        width={size}
+        height={size}
+        className={styles.avatarImg}
+        onError={() => setFailedUrl(url)}
+      />
+    );
+  }
+  return (
+    <span className={styles.avatarFallback} style={{ width: size, height: size }}>
+      {initial}
+    </span>
+  );
 }
 
 export default function PlayersPage() {
@@ -21,6 +55,7 @@ export default function PlayersPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingName, setEditName] = useState("");
+  const [uploadingId, setUploadingId] = useState<number | null>(null);
 
   const apiHeaders =
     typeof process !== "undefined"
@@ -133,6 +168,58 @@ export default function PlayersPage() {
     }
   };
 
+  const handleAvatarChange = async (
+    playerId: number,
+    file: File | undefined,
+    playerName: string,
+    input: HTMLInputElement
+  ) => {
+    if (!file) return;
+    input.value = "";
+    setMessage(null);
+
+    if (!AVATAR_TYPES.includes(file.type)) {
+      setMessage("头像仅支持 PNG / JPEG / WebP / GIF 图片");
+      return;
+    }
+    if (file.size > AVATAR_MAX_SIZE) {
+      setMessage("头像图片不能超过 2MB");
+      return;
+    }
+
+    setUploadingId(playerId);
+    try {
+      const formData = new FormData();
+      formData.append("player_id", String(playerId));
+      formData.append("file", file);
+
+      const res = await fetch("/api/players/avatar", {
+        method: "POST",
+        headers: apiHeaders || {},
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setMessage(data.error || "头像上传失败");
+      } else {
+        // 后端返回更新后的 player
+        const updated = data.data;
+        if (updated) {
+          setPlayers((prev) =>
+            prev.map((p) => (p.id === playerId ? { ...p, ...updated } : p))
+          );
+        } else {
+          await loadPlayers();
+        }
+        setMessage(`${playerName} 的头像已更新`);
+      }
+    } catch (err) {
+      setMessage("头像上传失败");
+    } finally {
+      setUploadingId(null);
+    }
+  };
+
   if (!mounted || !isAuthenticated()) {
     return null;
   }
@@ -166,6 +253,9 @@ export default function PlayersPage() {
 
           <section className={styles.card}>
             <h2 className={styles.sectionTitle}>玩家列表</h2>
+            <p className={styles.avatarHint}>
+              点击头像可上传或更换（支持 PNG / JPEG / WebP / GIF，单张不超过 2MB）
+            </p>
             {loading ? (
               <div className={styles.placeholder}>加载中...</div>
             ) : players.length === 0 ? (
@@ -177,85 +267,128 @@ export default function PlayersPage() {
               <table className={styles.table}>
                 <thead>
                   <tr>
-                    <th>ID</th>
+                    <th>头像</th>
                     <th>玩家名称</th>
                     <th>操作</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {players.map((p) => (
-                    <tr key={p.id}>
-                      <td className={styles.idCell}>{p.id}</td>
-                      <td>
-                        {editingId === p.id ? (
-                          <input
-                            type="text"
-                            className={styles.inlineInput}
-                            value={editingName}
-                            onChange={(e) => setEditName(e.target.value)}
-                            autoFocus
-                          />
-                        ) : (
-                          <span className={styles.playerCell}>{p.name}</span>
-                        )}
-                      </td>
-                      <td>
-                        <div className={styles.rowActions}>
+                  {players.map((p) => {
+                    const uploading = uploadingId === p.id;
+                    return (
+                      <tr key={p.id}>
+                        <td>
+                          <label
+                            className={styles.avatarCell}
+                            title={
+                              uploading
+                                ? "上传中..."
+                                : "点击更换头像（PNG/JPEG/WebP/GIF，≤2MB）"
+                            }
+                          >
+                            <PlayerAvatar name={p.name} url={p.avatar_url} />
+                            <span
+                              className={`${styles.avatarOverlay} ${
+                                uploading ? styles.avatarOverlayUploading : ""
+                              }`}
+                            >
+                              {uploading ? (
+                                <span className="material-symbols-outlined">
+                                  progress_activity
+                                </span>
+                              ) : (
+                                <span className="material-symbols-outlined">
+                                  photo_camera
+                                </span>
+                              )}
+                            </span>
+                            <input
+                              type="file"
+                              accept={AVATAR_TYPES.join(",")}
+                              className={styles.avatarInput}
+                              disabled={uploading || submitting}
+                              onChange={(e) =>
+                                handleAvatarChange(
+                                  p.id,
+                                  e.target.files?.[0],
+                                  p.name,
+                                  e.target
+                                )
+                              }
+                            />
+                          </label>
+                        </td>
+                        <td>
                           {editingId === p.id ? (
-                            <>
-                              <button
-                                className={styles.saveButton}
-                                onClick={handleUpdate}
-                                disabled={submitting}
-                                type="button"
-                              >
-                                <span className="material-symbols-outlined">
-                                  check
-                                </span>
-                                保存
-                              </button>
-                              <button
-                                className={styles.cancelButton}
-                                onClick={() => setEditingId(null)}
-                                disabled={submitting}
-                                type="button"
-                              >
-                                取消
-                              </button>
-                            </>
+                            <input
+                              type="text"
+                              className={styles.inlineInput}
+                              value={editingName}
+                              onChange={(e) => setEditName(e.target.value)}
+                              autoFocus
+                            />
                           ) : (
-                            <>
-                              <button
-                                className={styles.editButton}
-                                onClick={() => {
-                                  setEditingId(p.id);
-                                  setEditName(p.name);
-                                }}
-                                disabled={submitting}
-                                type="button"
-                              >
-                                <span className="material-symbols-outlined">
-                                  edit
-                                </span>
-                                修改
-                              </button>
-                              <button
-                                className={styles.deleteButton}
-                                onClick={() => handleDelete(p.id, p.name)}
-                                disabled={submitting}
-                                type="button"
-                              >
-                                <span className="material-symbols-outlined">
-                                  delete
-                                </span>
-                                删除
-                              </button>
-                            </>
+                            <span className={styles.playerCell}>{p.name}</span>
                           )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td>
+                          <div className={styles.rowActions}>
+                            {editingId === p.id ? (
+                              <>
+                                <button
+                                  className={styles.saveButton}
+                                  onClick={handleUpdate}
+                                  disabled={submitting}
+                                  type="button"
+                                >
+                                  <span className="material-symbols-outlined">
+                                    check
+                                  </span>
+                                  保存
+                                </button>
+                                <button
+                                  className={styles.cancelButton}
+                                  onClick={() => setEditingId(null)}
+                                  disabled={submitting}
+                                  type="button"
+                                >
+                                  取消
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  className={styles.editButton}
+                                  onClick={() => {
+                                    setEditingId(p.id);
+                                    setEditName(p.name);
+                                  }}
+                                  disabled={submitting || uploading}
+                                  type="button"
+                                >
+                                  <span className="material-symbols-outlined">
+                                    edit
+                                  </span>
+                                  修改
+                                </button>
+                                <button
+                                  className={styles.deleteButton}
+                                  onClick={() => handleDelete(p.id, p.name)}
+                                  disabled={submitting || uploading}
+                                  type="button"
+                                >
+                                  <span className="material-symbols-outlined">
+                                    delete
+                                  </span>
+                                  删除
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             )}
@@ -265,4 +398,3 @@ export default function PlayersPage() {
     </AppShell>
   );
 }
-

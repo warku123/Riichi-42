@@ -163,6 +163,90 @@
   width: 60px;
 }
 
+/* ============ 头像 ============ */
+.avatarHint {
+  margin: -0.5rem 0 1.25rem;
+  font-size: 0.75rem;
+  color: var(--ink-secondary);
+}
+
+.avatarCell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.avatarImg,
+.avatarFallback {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 1.0625rem;
+  color: var(--green-on);
+  background: var(--green);
+  user-select: none;
+}
+
+.avatarOverlay {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-full);
+  background: rgba(26, 26, 26, 0.55);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+.avatarCell:hover .avatarOverlay {
+  opacity: 1;
+}
+
+.avatarOverlay .material-symbols-outlined {
+  font-size: 20px;
+}
+
+.avatarOverlayUploading {
+  opacity: 1;
+  background: rgba(45, 90, 39, 0.6);
+}
+
+.avatarOverlayUploading .material-symbols-outlined {
+  animation: spin 0.9s linear infinite;
+}
+
+.avatarInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .playerCell {
   font-weight: 600;
   color: var(--ink);

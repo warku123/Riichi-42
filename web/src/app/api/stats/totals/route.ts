@@ -2,6 +2,30 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
 
+interface PlayerInfo {
+  id: number;
+  name: string;
+  avatar_url: string | null;
+}
+
+interface PlayerTotalRow {
+  player_id: number;
+  name: string;
+  total_score: number;
+  match_count: number;
+}
+
+const attachAvatars = (rows: PlayerTotalRow[], players: PlayerInfo[] | null) => {
+  const avatarById = new Map(
+    (players || []).map((player) => [player.id, player.avatar_url])
+  );
+
+  return rows.map((row) => ({
+    ...row,
+    avatar_url: avatarById.get(row.player_id) ?? null,
+  }));
+};
+
 // GET /api/stats/totals - 获取所有选手的总分统计
 // 支持可选参数: start, end (ISO 时间字符串)
 export async function GET(req: NextRequest) {
@@ -12,10 +36,15 @@ export async function GET(req: NextRequest) {
 
     // 如果没有时间过滤参数，使用视图查询（全部数据）
     if (!start && !end) {
-      const { data, error } = await supabase
-        .from('player_totals')
-        .select('*')
-        .order('total_score', { ascending: false });
+      const [{ data, error }, { data: players, error: playersError }] = await Promise.all([
+        supabase
+          .from('player_totals')
+          .select('player_id, name, total_score, match_count')
+          .order('total_score', { ascending: false }),
+        supabase
+          .from('players')
+          .select('id, name, avatar_url'),
+      ]);
 
       if (error) {
         return NextResponse.json(
@@ -24,14 +53,21 @@ export async function GET(req: NextRequest) {
         );
       }
 
-      return NextResponse.json({ data });
+      if (playersError) {
+        return NextResponse.json(
+          { error: playersError.message },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({ data: attachAvatars(data || [], players) });
     }
 
     // 有时间过滤参数，使用直接查询
     // 先获取所有玩家
     const { data: players, error: playersError } = await supabase
       .from('players')
-      .select('id, name');
+      .select('id, name, avatar_url');
 
     if (playersError) {
       return NextResponse.json(
@@ -66,6 +102,7 @@ export async function GET(req: NextRequest) {
       const data = players?.map(p => ({
         player_id: p.id,
         name: p.name,  // 统一使用 name 字段，与视图保持一致
+        avatar_url: p.avatar_url,
         total_score: 0,
         avg_score: 0,
         match_count: 0
@@ -106,6 +143,7 @@ export async function GET(req: NextRequest) {
       return {
         player_id: p.id,
         name: p.name,  // 统一使用 name 字段，与视图保持一致
+        avatar_url: p.avatar_url,
         total_score: Math.round(stats.total * 100) / 100,
         avg_score: stats.count > 0 
           ? Math.round((stats.total / stats.count) * 100) / 100 
@@ -125,4 +163,3 @@ export async function GET(req: NextRequest) {
     );
   }
 }
-

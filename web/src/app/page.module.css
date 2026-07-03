@@ -88,10 +88,10 @@
   font-size: 18px;
 }
 
-/* ============ 内容网格 ============ */
+/* ============ 内容布局 ============ */
 .content {
-  display: grid;
-  grid-template-columns: 450px 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 1.5rem;
 }
 
@@ -102,7 +102,390 @@
   font-weight: 500;
 }
 
-/* ============ 卡片 ============ */
+/* ============ 天梯榜区 ============ */
+.leaderboardSection {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- 桌面领奖台 ---- */
+.podium {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 1rem;
+  margin: 0.5rem 0 1.5rem;
+}
+
+.podiumCard {
+  flex: 0 0 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1.25rem 1rem 1.5rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-soft);
+  background: var(--surface-2);
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.podiumCard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+
+.podiumFirst {
+  flex-basis: 240px;
+  background: linear-gradient(180deg, var(--green-container) 0%, var(--surface) 100%);
+  border-color: var(--green-light);
+  transform: translateY(-12px);
+  box-shadow: 0 8px 24px rgba(45, 90, 39, 0.12);
+}
+
+.podiumSecond {
+  border-color: var(--border);
+}
+
+.podiumThird {
+  border-color: var(--border);
+}
+
+.podiumMedal {
+  font-size: 1.75rem;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.podiumAvatar,
+.podiumAvatarFallback {
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  color: var(--green-on);
+  background: var(--green);
+  margin-bottom: 0.625rem;
+  border: 3px solid var(--surface);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.podiumFirst .podiumAvatar,
+.podiumFirst .podiumAvatarFallback {
+  border-color: var(--gold);
+}
+
+.podiumName {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--ink);
+  margin-bottom: 0.375rem;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.podiumScore {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 1.75rem;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.podiumScoreLabel {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-secondary);
+  margin-top: 0.125rem;
+}
+
+.podiumMeta {
+  margin-top: 0.625rem;
+  font-size: 0.75rem;
+  color: var(--ink-tertiary);
+  background: var(--surface-3);
+  padding: 0.125rem 0.625rem;
+  border-radius: var(--radius-full);
+}
+
+/* ---- 移动领奖台 ---- */
+.podiumMobile {
+  display: none;
+}
+
+.heroCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1.5rem 1.25rem;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, var(--green-container) 0%, var(--surface) 100%);
+  border: 1px solid var(--green-light);
+  box-shadow: 0 6px 18px rgba(45, 90, 39, 0.1);
+  margin-bottom: 0.75rem;
+}
+
+.heroTop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.heroMedal {
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.heroAvatar,
+.heroAvatarFallback {
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  color: var(--green-on);
+  background: var(--green);
+  border: 3px solid var(--gold);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.heroName {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 1.125rem;
+  color: var(--ink);
+  margin-top: 0.625rem;
+}
+
+.heroScore {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 2.25rem;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.375rem;
+}
+
+.heroScoreLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--ink-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.heroMeta {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--ink-tertiary);
+  background: var(--surface-3);
+  padding: 0.125rem 0.625rem;
+  border-radius: var(--radius-full);
+}
+
+.podiumMobileRow {
+  display: flex;
+  gap: 0.625rem;
+}
+
+.compactCard {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0.875rem 0.5rem;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+  position: relative;
+}
+
+.compactMedal {
+  font-size: 1.25rem;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.compactAvatar,
+.compactAvatarFallback {
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  color: var(--green-on);
+  background: var(--green);
+}
+
+.compactName {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0.375rem 0 0.25rem;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compactScore {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 1.125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+/* ---- 第四名及以后 ---- */
+.rankTableWrap {
+  overflow-x: auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-soft);
+}
+
+.rankTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.rankTable th {
+  background: var(--surface-2);
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-secondary);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.rankTable td {
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  border-bottom: 1px solid var(--surface-4);
+  color: var(--ink);
+}
+
+.rankTable tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.rankTable tbody tr {
+  transition: background 0.15s ease;
+}
+
+.rankTable tbody tr:hover td {
+  background: var(--surface-2);
+}
+
+.rankPlayerCell {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.rowAvatar,
+.rowAvatarFallback {
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 0.8125rem;
+  color: var(--green-on);
+  background: var(--green);
+  flex-shrink: 0;
+}
+
+/* 移动卡片列表 */
+.rankCards {
+  display: none;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.rankCard {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.75rem 0.875rem;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+}
+
+.rankCardName {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 0.875rem;
+  overflow: hidden;
+}
+
+.rankCardMeta {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--ink-tertiary);
+}
+
+.rankCardScore {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 1.0625rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.125rem;
+}
+
+.rankCardScoreLabel {
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: var(--ink-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ============ 卡片（最近对局等） ============ */
 .section {
   background: var(--surface);
   border-radius: var(--radius-lg);
@@ -619,7 +1002,7 @@
 /* ============ 响应式 ============ */
 @media (max-width: 1024px) {
   .content {
-    grid-template-columns: 1fr;
+    gap: 1.25rem;
   }
 }
 
@@ -635,5 +1018,26 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 0.75rem;
+  }
+
+  /* 领奖台：桌面隐藏，移动显示 */
+  .podium {
+    display: none;
+  }
+  .podiumMobile {
+    display: flex;
+    flex-direction: column;
+  }
+  .rankTableWrap {
+    display: none;
+  }
+  .rankCards {
+    display: flex;
+  }
+}
+
+@media (max-width: 480px) {
+  .podiumMobileRow {
+    flex-direction: column;
   }
 }

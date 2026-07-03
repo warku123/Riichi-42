@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
 
+const PLAYER_FIELDS = 'id, name, avatar_url';
+
 // GET /api/players - 获取所有选手列表
 export async function GET() {
   try {
     const { data, error } = await supabase
       .from('players')
-      .select('*')
+      .select(PLAYER_FIELDS)
       .order('name', { ascending: true });
 
     if (error) {
@@ -29,7 +31,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name } = body;
+    const { name, avatar_url } = body;
 
     if (!name || typeof name !== 'string' || name.trim() === '') {
       return NextResponse.json(
@@ -38,10 +40,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const insertPayload: Record<string, unknown> = { name: name.trim() };
+    if (avatar_url !== undefined) {
+      insertPayload.avatar_url = avatar_url;
+    }
+
     const { data, error } = await supabase
       .from('players')
-      .insert({ name: name.trim() })
-      .select()
+      .insert(insertPayload)
+      .select(PLAYER_FIELDS)
       .single();
 
     if (error) {
@@ -151,26 +158,44 @@ export async function DELETE(request: NextRequest) {
   }
 }
 
-// PATCH /api/players - 修改选手名称，要求 body: { id: number, name: string }
+// PATCH /api/players - 修改选手信息
+// body: { id: number, name?: string, avatar_url?: string | null }
+// name 必填（修改名称时），但若仅传 avatar_url 则允许仅更新头像
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
-    const { id, name } = body;
+    const { id, name, avatar_url } = body;
     const playerId = typeof id === 'string' ? parseInt(id) : id;
 
     if (!playerId || Number.isNaN(playerId)) {
       return NextResponse.json({ error: '无效的选手ID' }, { status: 400 });
     }
 
-    if (!name || typeof name !== 'string' || name.trim() === '') {
-      return NextResponse.json({ error: '选手名称不能为空' }, { status: 400 });
+    const updateData: Record<string, unknown> = {};
+
+    if (avatar_url !== undefined) {
+      updateData.avatar_url = avatar_url; // null is valid (clear avatar)
+    }
+
+    if (name !== undefined) {
+      if (typeof name !== 'string' || name.trim() === '') {
+        return NextResponse.json({ error: '选手名称不能为空' }, { status: 400 });
+      }
+      updateData.name = name.trim();
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json(
+        { error: '未提供任何更新字段' },
+        { status: 400 }
+      );
     }
 
     const { data, error } = await supabase
       .from('players')
-      .update({ name: name.trim() })
+      .update(updateData)
       .eq('id', playerId)
-      .select()
+      .select(PLAYER_FIELDS)
       .single();
 
     if (error) {
@@ -185,4 +210,3 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: '服务器错误' }, { status: 500 });
   }
 }
-

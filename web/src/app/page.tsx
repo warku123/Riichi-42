@@ -11,11 +11,48 @@ interface PlayerTotal {
   name: string;
   total_score: number;
   match_count: number;
+  avatar_url?: string | null;
 }
 
 interface Player {
   id: number;
   name: string;
+}
+
+function PlayerAvatar({
+  name,
+  url,
+  className,
+  fallbackClassName,
+  size,
+}: {
+  name: string;
+  url?: string | null;
+  className?: string;
+  fallbackClassName?: string;
+  size?: number;
+}) {
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  if (url && failedUrl !== url) {
+    return (
+      <img
+        src={url}
+        alt={name}
+        className={className}
+        style={size ? { width: size, height: size } : undefined}
+        onError={() => setFailedUrl(url)}
+      />
+    );
+  }
+  const initial = (name || "?").charAt(0).toUpperCase() || "?";
+  return (
+    <span
+      className={fallbackClassName}
+      style={size ? { width: size, height: size } : undefined}
+    >
+      {initial}
+    </span>
+  );
 }
 
 interface MatchResult {
@@ -345,6 +382,19 @@ export default function Home() {
     return "";
   };
 
+  // 当前排序模式下的展示指标（总分 / 均分）
+  const metricInfo = (p: PlayerTotal) => {
+    if (sortMode === "total") {
+      const v = p.total_score || 0;
+      return { label: "总分", value: v.toFixed(2), score: v, neutral: false };
+    }
+    if (p.match_count >= 10) {
+      const v = (p.total_score || 0) / p.match_count;
+      return { label: "均分", value: v.toFixed(2), score: v, neutral: false };
+    }
+    return { label: "均分", value: "-", score: 0, neutral: true };
+  };
+
   if (!mounted || !isAuthenticated()) {
     return null;
   }
@@ -393,7 +443,7 @@ export default function Home() {
             <div className={styles.loading}>加载中...</div>
           ) : (
             <>
-              <section className={styles.section}>
+              <section className={styles.leaderboardSection}>
                 <div className={styles.sectionHeader}>
                   <h2 className={styles.sectionTitle}>分数天梯榜</h2>
                   <div className={styles.sortToggle}>
@@ -417,62 +467,259 @@ export default function Home() {
                     </button>
                   </div>
                 </div>
-                <div className={styles.tableContainer}>
-                  <table className={styles.table}>
-                    <thead>
-                      <tr>
-                        <th>排名</th>
-                        <th>选手</th>
-                        <th>场次</th>
-                        <th>总分</th>
-                        <th>均分</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {sortedLeaderboard.length === 0 ? (
-                        <tr>
-                          <td colSpan={5} className={styles.empty}>
-                            暂无数据
-                          </td>
-                        </tr>
-                      ) : (
-                        sortedLeaderboard.map((player, index) => (
-                          <tr key={player.player_id}>
-                            <td>
-                              <span
-                                className={`${styles.rankBadge} ${rankBadgeClass(
-                                  index + 1,
-                                  sortedLeaderboard.length
-                                )}`}
-                              >
-                                {index + 1}
-                              </span>
-                            </td>
-                            <td className={styles.playerCell}>{player.name}</td>
-                            <td className={styles.matchCount}>
-                              {player.match_count || 0}
-                            </td>
-                            <td
-                              className={`${styles.score} ${scoreClass(
-                                player.total_score || 0
-                              )}`}
+
+                {sortedLeaderboard.length === 0 ? (
+                  <div className={styles.empty}>暂无数据</div>
+                ) : (
+                  <>
+                    {/* 桌面：前三名领奖台 */}
+                    <div className={styles.podium}>
+                      {[1, 0, 2].map((idx) => {
+                        const p = sortedLeaderboard[idx];
+                        if (!p) return null;
+                        const rank = idx + 1;
+                        const info = metricInfo(p);
+                        return (
+                          <div
+                            key={p.player_id}
+                            className={`${styles.podiumCard} ${
+                              rank === 1 ? styles.podiumFirst : ""
+                            } ${rank === 2 ? styles.podiumSecond : ""} ${
+                              rank === 3 ? styles.podiumThird : ""
+                            }`}
+                          >
+                            <div className={styles.podiumMedal}>
+                              {rank === 1 ? "🥇" : rank === 2 ? "🥈" : "🥉"}
+                            </div>
+                            <PlayerAvatar
+                              name={p.name}
+                              url={p.avatar_url}
+                              className={styles.podiumAvatar}
+                              fallbackClassName={styles.podiumAvatarFallback}
+                              size={rank === 1 ? 76 : 60}
+                            />
+                            <div className={styles.podiumName}>{p.name}</div>
+                            <div
+                              className={`${styles.podiumScore} ${
+                                info.neutral
+                                  ? ""
+                                  : info.score > 0
+                                  ? styles.positive
+                                  : info.score < 0
+                                  ? styles.negative
+                                  : ""
+                              }`}
                             >
-                              {(player.total_score || 0).toFixed(2)}
-                            </td>
-                            <td className={styles.avgScore}>
-                              {player.match_count >= 10
-                                ? (
-                                    (player.total_score || 0) /
-                                    player.match_count
-                                  ).toFixed(2)
-                                : "-"}
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                              {info.value}
+                            </div>
+                            <div className={styles.podiumScoreLabel}>
+                              {info.label}
+                            </div>
+                            <div className={styles.podiumMeta}>
+                              {p.match_count || 0} 场
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* 移动：首位 hero + 二三位紧凑 */}
+                    <div className={styles.podiumMobile}>
+                      {(() => {
+                        const p = sortedLeaderboard[0];
+                        if (!p) return null;
+                        const info = metricInfo(p);
+                        return (
+                          <div className={styles.heroCard}>
+                            <div className={styles.heroTop}>
+                              <span className={styles.heroMedal}>🥇</span>
+                              <PlayerAvatar
+                                name={p.name}
+                                url={p.avatar_url}
+                                className={styles.heroAvatar}
+                                fallbackClassName={styles.heroAvatarFallback}
+                                size={64}
+                              />
+                            </div>
+                            <div className={styles.heroName}>{p.name}</div>
+                            <div
+                              className={`${styles.heroScore} ${
+                                info.neutral
+                                  ? ""
+                                  : info.score > 0
+                                  ? styles.positive
+                                  : info.score < 0
+                                  ? styles.negative
+                                  : ""
+                              }`}
+                            >
+                              {info.value}
+                              <span className={styles.heroScoreLabel}>
+                                {info.label}
+                              </span>
+                            </div>
+                            <div className={styles.heroMeta}>
+                              {p.match_count || 0} 场
+                            </div>
+                          </div>
+                        );
+                      })()}
+                      <div className={styles.podiumMobileRow}>
+                        {[1, 2].map((idx) => {
+                          const p = sortedLeaderboard[idx];
+                          if (!p) return null;
+                          const rank = idx + 1;
+                          const info = metricInfo(p);
+                          return (
+                            <div
+                              key={p.player_id}
+                              className={styles.compactCard}
+                            >
+                              <span className={styles.compactMedal}>
+                                {rank === 2 ? "🥈" : "🥉"}
+                              </span>
+                              <PlayerAvatar
+                                name={p.name}
+                                url={p.avatar_url}
+                                className={styles.compactAvatar}
+                                fallbackClassName={styles.compactAvatarFallback}
+                                size={40}
+                              />
+                              <div className={styles.compactName}>{p.name}</div>
+                              <div
+                                className={`${styles.compactScore} ${
+                                  info.neutral
+                                    ? ""
+                                    : info.score > 0
+                                    ? styles.positive
+                                    : info.score < 0
+                                    ? styles.negative
+                                    : ""
+                                }`}
+                              >
+                                {info.value}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* 第四名及以后：桌面表格 / 移动卡片 */}
+                    {sortedLeaderboard.length > 3 && (
+                      <>
+                        <div className={styles.rankTableWrap}>
+                          <table className={styles.rankTable}>
+                            <thead>
+                              <tr>
+                                <th>排名</th>
+                                <th>选手</th>
+                                <th>场次</th>
+                                <th>{sortMode === "total" ? "总分" : "均分"}</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {sortedLeaderboard.slice(3).map((p, i) => {
+                                const rank = i + 4;
+                                const info = metricInfo(p);
+                                return (
+                                  <tr key={p.player_id}>
+                                    <td>
+                                      <span
+                                        className={`${styles.rankBadge} ${rankBadgeClass(
+                                          rank,
+                                          sortedLeaderboard.length
+                                        )}`}
+                                      >
+                                        {rank}
+                                      </span>
+                                    </td>
+                                    <td className={styles.rankPlayerCell}>
+                                      <PlayerAvatar
+                                        name={p.name}
+                                        url={p.avatar_url}
+                                        className={styles.rowAvatar}
+                                        fallbackClassName={
+                                          styles.rowAvatarFallback
+                                        }
+                                        size={32}
+                                      />
+                                      <span>{p.name}</span>
+                                    </td>
+                                    <td className={styles.matchCount}>
+                                      {p.match_count || 0}
+                                    </td>
+                                    <td
+                                      className={`${styles.score} ${
+                                        info.neutral
+                                          ? ""
+                                          : info.score > 0
+                                          ? styles.positive
+                                          : info.score < 0
+                                          ? styles.negative
+                                          : ""
+                                      }`}
+                                    >
+                                      {info.value}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        <div className={styles.rankCards}>
+                          {sortedLeaderboard.slice(3).map((p, i) => {
+                            const rank = i + 4;
+                            const info = metricInfo(p);
+                            return (
+                              <div key={p.player_id} className={styles.rankCard}>
+                                <span
+                                  className={`${styles.rankBadge} ${rankBadgeClass(
+                                    rank,
+                                    sortedLeaderboard.length
+                                  )}`}
+                                >
+                                  {rank}
+                                </span>
+                                <PlayerAvatar
+                                  name={p.name}
+                                  url={p.avatar_url}
+                                  className={styles.rowAvatar}
+                                  fallbackClassName={styles.rowAvatarFallback}
+                                  size={36}
+                                />
+                                <div className={styles.rankCardName}>
+                                  {p.name}
+                                  <span className={styles.rankCardMeta}>
+                                    {p.match_count || 0} 场
+                                  </span>
+                                </div>
+                                <div
+                                  className={`${styles.rankCardScore} ${
+                                    info.neutral
+                                      ? ""
+                                      : info.score > 0
+                                      ? styles.positive
+                                      : info.score < 0
+                                      ? styles.negative
+                                      : ""
+                                  }`}
+                                >
+                                  {info.value}
+                                  <span className={styles.rankCardScoreLabel}>
+                                    {info.label}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
               </section>
 
               <section className={styles.section}>
