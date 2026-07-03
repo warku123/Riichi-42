@@ -68,19 +68,20 @@ function SearchableSelect({
 
   const selected = options.find((o) => o.value === value);
 
+  const closeSelect = () => {
+    setOpen(false);
+    setKeyword("");
+  };
+
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
+        closeSelect();
       }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
-
-  useEffect(() => {
-    if (!open) setKeyword("");
-  }, [open]);
 
   return (
     <div className={styles.select} ref={ref}>
@@ -89,7 +90,12 @@ function SearchableSelect({
           disabled ? styles.selectDisabled : ""
         }`}
         onClick={() => {
-          if (!disabled) setOpen((v) => !v);
+          if (disabled) return;
+          if (open) {
+            closeSelect();
+          } else {
+            setOpen(true);
+          }
         }}
       >
         {selected ? (
@@ -122,7 +128,7 @@ function SearchableSelect({
                   className={styles.selectOption}
                   onClick={() => {
                     onChange(o.value);
-                    setOpen(false);
+                    closeSelect();
                   }}
                 >
                   {o.label}
@@ -383,8 +389,8 @@ export default function MatchesPage() {
       setMessage(editingId ? "更新成功" : "创建成功");
       await loadMatches();
       resetForm();
-    } catch (err: any) {
-      setMessage(err.message || "操作失败");
+    } catch (err: unknown) {
+      setMessage(err instanceof Error ? err.message : "操作失败");
     } finally {
       setSubmitting(false);
     }
@@ -428,8 +434,8 @@ export default function MatchesPage() {
       }
       await loadMatches();
       if (editingId === id) resetForm();
-    } catch (err: any) {
-      setMessage(err.message || "删除失败");
+    } catch (err: unknown) {
+      setMessage(err instanceof Error ? err.message : "删除失败");
     } finally {
       setSubmitting(false);
     }
@@ -714,4 +720,3 @@ export default function MatchesPage() {
     </main>
   );
 }
-

@@ -32,8 +32,8 @@
 ```env
 NEXT_PUBLIC_SUPABASE_URL=你的Supabase项目地址
 NEXT_PUBLIC_SUPABASE_ANON_KEY=你的Supabase匿名密钥
-API_KEY=你的API保护密钥
-NEXT_PUBLIC_API_KEY=你的API保护密钥（需与上方一致，用于前端调用）
+API_SECRET=你的API保护密钥
+NEXT_PUBLIC_API_SECRET=你的API保护密钥（需与上方一致，用于前端调用）
 ```
 
 ### 2. 数据库设置
@@ -84,4 +84,3 @@ Riichi-42/
 - 第三名：`(点数/1000) - 40`
 - 第四名：`(点数/1000) - 60`
 - **同分处理**：如果出现名次并列，则取对应名次分值的平均值。
-

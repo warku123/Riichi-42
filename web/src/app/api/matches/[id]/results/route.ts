@@ -2,6 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
 import { computeScores, SeatKey } from '@/lib/score';
 
+interface SubmittedResult {
+  player_id: number | string;
+  seat: string;
+  points: number;
+}
+
+function isSeatKey(seat: string): seat is SeatKey {
+  return ['E', 'S', 'W', 'N'].includes(seat);
+}
+
 // GET /api/matches/[id]/results - 获取某场对局的成绩
 export async function GET(
   request: NextRequest,
@@ -56,7 +66,7 @@ export async function POST(
         { status: 400 }
       );
     }
-    const body = await request.json();
+    const body = await request.json() as { results?: SubmittedResult[] };
     const { results } = body; // results 应该是包含4条记录的数组
 
     if (!Array.isArray(results) || results.length !== 4) {
@@ -76,7 +86,7 @@ export async function POST(
     }
 
     // 验证每个记录的必要字段并检查玩家重复
-    const playerIds = new Set();
+    const playerIds = new Set<number | string>();
     for (const r of results) {
       if (r.player_id === undefined || r.player_id === null || !r.seat || r.points === undefined || r.points === null) {
         return NextResponse.json(
@@ -84,7 +94,7 @@ export async function POST(
           { status: 400 }
         );
       }
-      if (!['E', 'S', 'W', 'N'].includes(r.seat)) {
+      if (!isSeatKey(r.seat)) {
         return NextResponse.json(
           { error: 'seat 必须是 E, S, W, N 之一' },
           { status: 400 }
@@ -101,7 +111,7 @@ export async function POST(
 
     // 计算名次与分数（同分共享加减分）
     const computedBySeat = computeScores(
-      results.map((r: any) => ({
+      results.map((r) => ({
         seat: r.seat as SeatKey,
         points: Number(r.points),
         player_id: typeof r.player_id === 'string' ? parseInt(r.player_id) : r.player_id,
@@ -154,4 +164,3 @@ export async function POST(
     );
   }
 }
-

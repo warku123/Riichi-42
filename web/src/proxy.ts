@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 
 const API_SECRET = process.env.API_SECRET;
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   // 仅保护 /api/* 路径
   if (!req.nextUrl.pathname.startsWith("/api")) {
     return NextResponse.next();
@@ -21,4 +21,3 @@ export function middleware(req: NextRequest) {
 export const config = {
   matcher: ["/api/:path*"],
 };
-

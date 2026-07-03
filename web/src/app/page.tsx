@@ -66,25 +66,32 @@ function SearchableSelect({
 
   const selected = options.find((o) => o.value === value);
 
+  const closeSelect = () => {
+    setOpen(false);
+    setKeyword("");
+  };
+
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
+        closeSelect();
       }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  useEffect(() => {
-    if (!open) setKeyword("");
-  }, [open]);
-
   return (
     <div className={styles.select} ref={ref}>
       <div
         className={styles.selectControl}
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          if (open) {
+            closeSelect();
+          } else {
+            setOpen(true);
+          }
+        }}
       >
         {selected ? (
           <span className={styles.selectValue}>{selected.label}</span>
@@ -116,7 +123,7 @@ function SearchableSelect({
                   className={styles.selectOption}
                   onClick={() => {
                     onChange(o.value);
-                    setOpen(false);
+                    closeSelect();
                   }}
                 >
                   {o.label}
