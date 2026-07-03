@@ -1,6 +1,9 @@
 .container {
   min-height: 100vh;
   background-color: var(--gray-50);
+  background-image:
+    radial-gradient(60rem 60rem at 110% -10%, var(--accent-soft), transparent 60%);
+  background-attachment: fixed;
 }
 
 .header {
@@ -43,6 +46,11 @@
   border: 1px solid var(--gray-200);
   box-shadow: var(--shadow-sm);
   margin-bottom: 2rem;
+  transition: box-shadow 0.25s ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow);
 }
 
 .cardHeader {
@@ -58,6 +66,18 @@
   font-size: 1.125rem;
   font-weight: 700;
   color: var(--gray-900);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sectionTitle::before {
+  content: "";
+  display: inline-block;
+  width: 4px;
+  height: 18px;
+  background: var(--accent);
+  border-radius: 2px;
 }
 
 .form {
@@ -91,6 +111,14 @@
   border-radius: 10px;
   font-size: 0.9375rem;
   background: var(--gray-50);
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.formRow input:focus, .formRow select:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--background);
+  box-shadow: var(--ring);
 }
 
 .grid {
@@ -132,6 +160,16 @@
   cursor: pointer;
   background: var(--background);
   font-size: 0.875rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.selectControl:hover {
+  border-color: var(--gray-300);
+}
+
+.selectControl:focus-within {
+  border-color: var(--accent);
+  box-shadow: var(--ring);
 }
 
 .selectDropdown {
@@ -161,6 +199,13 @@
   border: 1px solid var(--gray-200);
   border-radius: 6px;
   font-size: 0.8125rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.selectSearch input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--ring);
 }
 
 .selectOptions {
@@ -174,7 +219,7 @@
 }
 
 .selectOption:hover {
-  background: var(--gray-50);
+  background: var(--accent-soft);
 }
 
 .actions {
@@ -186,18 +231,19 @@
 
 .actions button {
   padding: 0.75rem 2rem;
-  background: var(--gray-900);
-  color: var(--primary-foreground);
+  background: var(--accent);
+  color: var(--accent-foreground);
   border: none;
   border-radius: 10px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 
 .actions button:hover {
-  background: var(--gray-800);
+  background: var(--accent-hover);
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--accent-ring);
 }
 
 .secondaryButton {
@@ -247,23 +293,31 @@
   font-size: 0.8125rem;
   background: var(--background);
   color: var(--gray-900);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.filterGroup input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--ring);
 }
 
 .filterButton {
   padding: 0.5rem 1.25rem;
-  background: var(--gray-900);
-  color: var(--primary-foreground);
+  background: var(--accent);
+  color: var(--accent-foreground);
   border: none;
   border-radius: 8px;
   font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 
 .filterButton:hover {
-  background: var(--gray-800);
+  background: var(--accent-hover);
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--accent-ring);
 }
 
 .pagination {
@@ -289,9 +343,9 @@
 }
 
 .pagination button:hover:not(:disabled) {
-  background: var(--gray-50);
-  border-color: var(--gray-900);
-  color: var(--gray-900);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .pagination button:disabled {
@@ -315,6 +369,13 @@
   border: 1px solid var(--gray-200);
   border-radius: 12px;
   overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.matchCard:hover {
+  border-color: var(--gray-300);
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
 }
 
 .matchHeader {
@@ -344,12 +405,18 @@
 .deleteButton {
   padding: 0.5rem 1rem;
   background: var(--background);
-  color: #ef4444;
+  color: var(--danger);
   border: 1px solid var(--gray-200);
   border-radius: 8px;
   font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.deleteButton:hover {
+  background: var(--danger-soft);
+  border-color: var(--danger);
 }
 
 .copyButton {
@@ -365,9 +432,9 @@
 }
 
 .copyButton:hover {
-  background: var(--gray-50);
-  border-color: var(--gray-900);
-  color: var(--gray-900);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .table {

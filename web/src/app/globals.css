@@ -1,9 +1,15 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  --accent: #0070f3;
+  --accent: #4338ca;
+  --accent-hover: #3730a3;
+  --accent-soft: rgba(79, 70, 229, 0.08);
+  --accent-soft-strong: rgba(79, 70, 229, 0.14);
   --accent-foreground: #ffffff;
-  
+  --accent-ring: rgba(79, 70, 229, 0.35);
+  --danger: #dc2626;
+  --danger-soft: #fef2f2;
+
   --gray-50: #fafafa;
   --gray-100: #f5f5f5;
   --gray-200: #e5e5e5;
@@ -16,13 +22,15 @@
   --gray-900: #171717;
 
   --radius: 8px;
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 3px 0 rgb(0 0 0 / 0.06);
+  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.06), 0 1px 2px 0 rgb(0 0 0 / 0.04);
+  --shadow-md: 0 12px 20px -4px rgb(0 0 0 / 0.10), 0 4px 8px -4px rgb(0 0 0 / 0.06), 0 1px 2px 0 rgb(0 0 0 / 0.04);
+  --shadow-lg: 0 24px 48px -12px rgb(0 0 0 / 0.22), 0 8px 16px -8px rgb(0 0 0 / 0.12);
+  --ring: 0 0 0 3px var(--accent-ring);
+
   --primary: var(--gray-900);
   --primary-foreground: #ffffff;
-  --header-bg: rgba(255, 255, 255, 0.8);
+  --header-bg: rgba(255, 255, 255, 0.82);
   --font-sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
@@ -30,6 +38,15 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --accent: #818cf8;
+    --accent-hover: #a5b4fc;
+    --accent-soft: rgba(129, 140, 248, 0.12);
+    --accent-soft-strong: rgba(129, 140, 248, 0.20);
+    --accent-foreground: #0a0a0a;
+    --accent-ring: rgba(129, 140, 248, 0.40);
+    --danger: #f87171;
+    --danger-soft: rgba(248, 113, 113, 0.12);
+
     --gray-50: #171717;
     --gray-100: #262626;
     --gray-200: #404040;
@@ -40,9 +57,12 @@
     --gray-700: #e5e5e5;
     --gray-800: #f5f5f5;
     --gray-900: #fafafa;
-    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3);
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+    --shadow-md: 0 12px 20px -4px rgb(0 0 0 / 0.5), 0 4px 8px -4px rgb(0 0 0 / 0.3);
+    --shadow-lg: 0 24px 48px -12px rgb(0 0 0 / 0.6), 0 8px 16px -8px rgb(0 0 0 / 0.4);
     --primary-foreground: #0a0a0a;
-    --header-bg: rgba(10, 10, 10, 0.8);
+    --header-bg: rgba(10, 10, 10, 0.82);
   }
 }
 
@@ -75,4 +95,29 @@ input, select, textarea {
   font-family: var(--font-sans);
   color: inherit;
   background-color: transparent;
+}
+
+::selection {
+  background: var(--accent-soft-strong);
+  color: var(--foreground);
+}
+
+/* Scrollbar polish */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--gray-300) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: 8px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-400);
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
 }
