@@ -174,6 +174,7 @@ export default function Home() {
   const [leaderboard, setLeaderboard] = useState<PlayerTotal[]>([]);
   const [sortMode, setSortMode] = useState<"total" | "avg">("total");
   const [recentMatches, setRecentMatches] = useState<Match[]>([]);
+  const [recentMatchPlayerId, setRecentMatchPlayerId] = useState<number | "">("");
   const [loading, setLoading] = useState(true);
   
   // 赛季相关状态
@@ -290,7 +291,11 @@ export default function Home() {
   };
 
   // 加载数据（天梯榜 + 最近对局）
-  const loadData = async (seasonId: number | "all", seasonsList: Season[]) => {
+  const loadData = async (
+    seasonId: number | "all",
+    seasonsList: Season[],
+    playerId: number | "" = recentMatchPlayerId
+  ) => {
     try {
       setLoading(true);
       const { start, end } = getSeasonTimeRange(seasonId, seasonsList);
@@ -321,6 +326,7 @@ export default function Home() {
       matchParams.set("limit", "5");
       if (start) matchParams.set("start", start);
       if (end) matchParams.set("end", end);
+      if (playerId !== "") matchParams.set("player_id", String(playerId));
 
       // 加载最近5场对局
       const matchesRes = await fetch(`/api/matches?${matchParams}`, {
@@ -369,7 +375,7 @@ export default function Home() {
   // 赛季切换时重新加载数据
   const handleSeasonChange = (newSeasonId: number | "all") => {
     setSelectedSeasonId(newSeasonId);
-    loadData(newSeasonId, seasonsRef.current);
+    loadData(newSeasonId, seasonsRef.current, recentMatchPlayerId);
     // 如果已选择了玩家，重新加载该玩家的图表数据
     if (selectedPlayerId !== "") {
       loadPlayerHistory(selectedPlayerId, newSeasonId);
@@ -411,8 +417,16 @@ export default function Home() {
     }
   };
 
+  // 最近对局玩家筛选
+  const handleRecentMatchPlayerChange = (playerId: number | "") => {
+    setRecentMatchPlayerId(playerId);
+    loadData(selectedSeasonId, seasonsRef.current, playerId);
+  };
+
   // 获取选中玩家的名字
   const selectedPlayerName = players.find(p => p.id === selectedPlayerId)?.name || "";
+  const selectedRecentMatchPlayerName =
+    players.find((p) => p.id === recentMatchPlayerId)?.name || "";
 
   // 玩家选项（用于 SearchableSelect）
   const playerOptions: Option[] = players.map((p) => ({
@@ -640,7 +654,36 @@ export default function Home() {
               </section>
 
               <section className={styles.section}>
-                <h2 className={styles.sectionTitle}>最近五场对局</h2>
+                <div className={styles.sectionHeader}>
+                  <div>
+                    <h2 className={styles.sectionTitle}>
+                      {selectedRecentMatchPlayerName
+                        ? `${selectedRecentMatchPlayerName} 的最近五场对局`
+                        : "最近五场对局"}
+                    </h2>
+                    <p className={styles.sectionHint}>
+                      可按选手查看个人最近对局，赛季筛选同步生效
+                    </p>
+                  </div>
+                  <div className={styles.recentFilter}>
+                    <span className="material-symbols-outlined">person_search</span>
+                    <select
+                      value={recentMatchPlayerId}
+                      onChange={(e) =>
+                        handleRecentMatchPlayerChange(
+                          e.target.value === "" ? "" : Number(e.target.value)
+                        )
+                      }
+                    >
+                      <option value="">全部选手</option>
+                      {players.map((player) => (
+                        <option key={player.id} value={player.id}>
+                          {player.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
                 <div className={styles.matchesContainer}>
                   {recentMatches.length === 0 ? (
                     <div className={styles.empty}>暂无对局记录</div>

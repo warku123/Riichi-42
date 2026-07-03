@@ -151,6 +151,42 @@
   border-radius: 2px;
 }
 
+.sectionHint {
+  margin: 0.375rem 0 0 0.875rem;
+  font-size: 0.75rem;
+  color: var(--ink-secondary);
+}
+
+.recentFilter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-full);
+  padding: 0.375rem 0.75rem;
+}
+
+.recentFilter .material-symbols-outlined {
+  font-size: 18px;
+  color: var(--green);
+}
+
+.recentFilter select {
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+}
+
+.recentFilter:focus-within {
+  box-shadow: var(--ring);
+}
+
 /* ============ 排序切换 ============ */
 .sortToggle {
   display: flex;

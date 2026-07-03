@@ -6,7 +6,8 @@ import { getUsername, logout } from "@/lib/auth";
 import styles from "./AppShell.module.css";
 
 const navItems = [
-  { href: "/", label: "数据看板", icon: "dashboard" },
+  { href: "/", label: "天梯榜", icon: "leaderboard" },
+  { href: "/overview", label: "总览", icon: "dashboard" },
   { href: "/matches", label: "对局管理", icon: "casino" },
   { href: "/players", label: "玩家管理", icon: "group" },
 ];

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
 
-// GET /api/matches - 获取对局列表，可选 start/end 过滤
+// GET /api/matches - 获取对局列表，可选 start/end/player_id 过滤
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -9,11 +9,34 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get('offset') || '0');
     const start = searchParams.get('start'); // ISO string
     const end = searchParams.get('end');     // ISO string
+    const playerId = searchParams.get('player_id');
 
     let query = supabase
       .from('matches')
       .select('*', { count: 'exact' })
       .order('played_at', { ascending: false });
+
+    if (playerId) {
+      const { data: results, error: resultsError } = await supabase
+        .from('match_results')
+        .select('match_id')
+        .eq('player_id', playerId);
+
+      if (resultsError) {
+        return NextResponse.json(
+          { error: resultsError.message },
+          { status: 500 }
+        );
+      }
+
+      const matchIds = results?.map((result) => result.match_id) || [];
+
+      if (matchIds.length === 0) {
+        return NextResponse.json({ data: [], total: 0 });
+      }
+
+      query = query.in('id', matchIds);
+    }
 
     if (start) {
       query = query.gte('played_at', start);
@@ -70,4 +93,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
