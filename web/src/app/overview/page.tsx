@@ -2,6 +2,16 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import AppShell from "@/components/AppShell";
 import { getUsername, isAuthenticated } from "@/lib/auth";
 import styles from "./page.module.css";
@@ -209,6 +219,35 @@ export default function OverviewPage() {
     };
   }, [history]);
 
+  const lastTenHistory = useMemo(() => history.slice(0, 10), [history]);
+  const chartData = useMemo(
+    () =>
+      lastTenHistory.map((item, index) => ({
+        name: `第${index + 1}场`,
+        date: new Date(item.played_at).toLocaleDateString("zh-CN", {
+          month: "numeric",
+          day: "numeric",
+        }),
+        rank: item.rank,
+        score: item.score,
+      })),
+    [lastTenHistory]
+  );
+
+  const lastTenStats = useMemo(() => {
+    const total = lastTenHistory.length;
+    const rankSum = lastTenHistory.reduce((sum, item) => sum + item.rank, 0);
+    const scoreSum = lastTenHistory.reduce((sum, item) => sum + item.score, 0);
+
+    return {
+      total,
+      avgRank: total ? rankSum / total : 0,
+      scoreSum,
+      firstCount: lastTenHistory.filter((item) => item.rank === 1).length,
+      fourthCount: lastTenHistory.filter((item) => item.rank === 4).length,
+    };
+  }, [lastTenHistory]);
+
   const selectedPlayerName =
     players.find((player) => player.id === selectedPlayerId)?.name || "未选择选手";
   const latestMatch = recentMatches[0];
@@ -309,6 +348,107 @@ export default function OverviewPage() {
                     </div>
                     <span className={styles.statHint}>末位占比</span>
                   </div>
+                </div>
+              </section>
+
+              <section className={styles.chartSection}>
+                <div className={styles.sectionHeader}>
+                  <div>
+                    <h2 className={styles.sectionTitle}>近10场数据统计</h2>
+                    <p className={styles.sectionHint}>随上方选手和赛季筛选同步更新</p>
+                  </div>
+                  <span className={styles.playerPill}>{selectedPlayerName}</span>
+                </div>
+
+                <div className={styles.chartContainer}>
+                  {lastTenHistory.length === 0 ? (
+                    <div className={styles.chartPlaceholder}>
+                      <span className="material-symbols-outlined">show_chart</span>
+                      <p>该玩家在当前赛季暂无对局记录</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className={styles.chartInfo}>
+                        <span className={styles.playerName}>{selectedPlayerName}</span>
+                        <span className={styles.chartHint}>近 {lastTenStats.total} 场对局</span>
+                      </div>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <LineChart
+                          data={chartData}
+                          margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" stroke="var(--border-soft)" />
+                          <XAxis
+                            dataKey="date"
+                            tick={{ fill: "var(--ink-secondary)", fontSize: 12 }}
+                            axisLine={{ stroke: "var(--border)" }}
+                            tickLine={false}
+                          />
+                          <YAxis
+                            domain={[1, 4]}
+                            ticks={[1, 2, 3, 4]}
+                            reversed
+                            tick={{ fill: "var(--ink-secondary)", fontSize: 12 }}
+                            axisLine={{ stroke: "var(--border)" }}
+                            tickLine={false}
+                            label={{
+                              value: "名次",
+                              angle: -90,
+                              position: "insideLeft",
+                              fill: "var(--ink-secondary)",
+                              fontSize: 12,
+                            }}
+                          />
+                          <Tooltip
+                            contentStyle={{
+                              background: "var(--surface)",
+                              border: "1px solid var(--border)",
+                              borderRadius: "12px",
+                              boxShadow: "var(--shadow-pop)",
+                              fontSize: "0.875rem",
+                            }}
+                            formatter={(value) => [`第 ${value} 名`, "名次"]}
+                            labelFormatter={(label) => `日期: ${label}`}
+                          />
+                          <ReferenceLine y={2.5} stroke="var(--border-strong)" strokeDasharray="5 5" />
+                          <Line
+                            type="monotone"
+                            dataKey="rank"
+                            stroke="var(--green)"
+                            strokeWidth={2.5}
+                            dot={{ fill: "var(--green)", strokeWidth: 0, r: 5 }}
+                            activeDot={{
+                              r: 7,
+                              fill: "var(--green-dark)",
+                              strokeWidth: 2,
+                              stroke: "var(--gold)",
+                            }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+
+                      <div className={styles.lastTenStatsGrid}>
+                        <div className={`${styles.lastTenStatCard} ${styles.statAvg}`}>
+                          <span className={styles.statLabel}>平均名次</span>
+                          <span className={styles.lastTenStatValue}>{lastTenStats.avgRank.toFixed(2)}</span>
+                        </div>
+                        <div className={`${styles.lastTenStatCard} ${styles.statTotal}`}>
+                          <span className={styles.statLabel}>总得分</span>
+                          <span className={`${styles.lastTenStatValue} ${scoreClass(lastTenStats.scoreSum)}`}>
+                            {lastTenStats.scoreSum.toFixed(2)}
+                          </span>
+                        </div>
+                        <div className={`${styles.lastTenStatCard} ${styles.statFirst}`}>
+                          <span className={styles.statLabel}>第一次数</span>
+                          <span className={styles.lastTenStatValue}>{lastTenStats.firstCount}</span>
+                        </div>
+                        <div className={`${styles.lastTenStatCard} ${styles.statLast}`}>
+                          <span className={styles.statLabel}>第四次数</span>
+                          <span className={styles.lastTenStatValue}>{lastTenStats.fourthCount}</span>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </section>
 

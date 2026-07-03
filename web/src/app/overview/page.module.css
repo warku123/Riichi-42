@@ -168,6 +168,12 @@
   gap: 1rem;
 }
 
+.sectionHint {
+  margin: -0.875rem 0 1.25rem;
+  color: var(--ink-secondary);
+  font-size: 0.8125rem;
+}
+
 .playerPill {
   color: var(--green-dark);
   background: var(--green-container);
@@ -178,11 +184,122 @@
 }
 
 .tableCard,
-.latestCard {
+.latestCard,
+.chartSection {
   background: var(--surface);
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
+}
+
+.chartSection {
+  padding: 1.5rem;
+}
+
+.chartContainer {
+  min-height: 400px;
+}
+
+.chartPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  min-height: 300px;
+  color: var(--ink-tertiary);
+  font-size: 0.9375rem;
+}
+
+.chartPlaceholder .material-symbols-outlined {
+  font-size: 48px;
+  color: var(--surface-5);
+}
+
+.chartInfo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-left: 0.25rem;
+}
+
+.playerName {
+  font-family: var(--font-serif);
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.chartHint {
+  font-size: 0.8125rem;
+  color: var(--green-dark);
+  background: var(--green-container);
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+}
+
+.lastTenStatsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-soft);
+}
+
+.lastTenStatCard {
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  padding: 1rem 1rem 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.375rem;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.lastTenStatCard::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+}
+
+.lastTenStatCard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card);
+}
+
+.statAvg::before {
+  background: var(--green);
+}
+
+.statTotal::before {
+  background: var(--ink);
+}
+
+.statFirst::before {
+  background: var(--gold);
+}
+
+.statLast::before {
+  background: var(--red);
+}
+
+.lastTenStatValue {
+  font-family: var(--font-serif);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
 }
 
 .tableCard {
@@ -390,8 +507,18 @@
     grid-template-columns: 1fr;
   }
 
+  .lastTenStatsGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
   .sectionHeader {
     align-items: flex-start;
     flex-direction: column;
+  }
+}
+
+@media (max-width: 520px) {
+  .lastTenStatsGrid {
+    grid-template-columns: 1fr;
   }
 }
