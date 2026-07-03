@@ -41,6 +41,11 @@ export default function LoginPage() {
   return (
     <main className={styles.container}>
       <div className={styles.card}>
+        <div className={styles.brand}>
+          <span className={`material-symbols-outlined ${styles.brandIcon}`}>
+            style
+          </span>
+        </div>
         <h1 className={styles.title}>Riichi 记分系统</h1>
         <p className={styles.subtitle}>请登录以继续</p>
         

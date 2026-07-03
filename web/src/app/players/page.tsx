@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { isAuthenticated } from "@/lib/auth";
+import AppShell from "@/components/AppShell";
 import styles from "./page.module.css";
 
 interface Player {
@@ -138,105 +138,131 @@ export default function PlayersPage() {
   }
 
   return (
-    <main className={styles.container}>
-      <header className={styles.header}>
-        <Link href="/" className={styles.backButton}>
-          ← 返回首页
-        </Link>
-        <h1 className={styles.title}>用户管理</h1>
-      </header>
+    <AppShell>
+      <div className={styles.page}>
+        <div className={styles.pageHead}>
+          <h1 className={styles.pageTitle}>玩家管理</h1>
+          <p className={styles.pageSubtitle}>添加、修改、删除玩家</p>
+        </div>
 
-      <div className={styles.content}>
-        <section className={styles.card}>
-          <h2 className={styles.sectionTitle}>添加用户</h2>
-          <form className={styles.form} onSubmit={handleAdd}>
-            <input
-              type="text"
-              placeholder="输入用户名"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              disabled={submitting}
-            />
-            <button type="submit" disabled={submitting}>
-              {submitting ? "处理中..." : "添加"}
-            </button>
-          </form>
-          {message && <div className={styles.message}>{message}</div>}
-        </section>
+        <div className={styles.content}>
+          <section className={styles.card}>
+            <h2 className={styles.sectionTitle}>添加玩家</h2>
+            <form className={styles.form} onSubmit={handleAdd}>
+              <input
+                type="text"
+                placeholder="输入玩家名称"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                disabled={submitting}
+              />
+              <button type="submit" disabled={submitting} className={styles.primaryButton}>
+                <span className="material-symbols-outlined">person_add</span>
+                {submitting ? "处理中..." : "添加"}
+              </button>
+            </form>
+            {message && <div className={styles.message}>{message}</div>}
+          </section>
 
-        <section className={styles.card}>
-          <h2 className={styles.sectionTitle}>用户列表</h2>
-          {loading ? (
-            <div className={styles.placeholder}>加载中...</div>
-          ) : players.length === 0 ? (
-            <div className={styles.placeholder}>暂无用户</div>
-          ) : (
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>用户名</th>
-                  <th>操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                {players.map((p) => (
-                  <tr key={p.id}>
-                    <td>{p.id}</td>
-                    <td>
-                      {editingId === p.id ? (
-                        <input
-                          type="text"
-                          className={styles.inlineInput}
-                          value={editingName}
-                          onChange={(e) => setEditName(e.target.value)}
-                          autoFocus
-                        />
-                      ) : (
-                        p.name
-                      )}
-                    </td>
-                    <td>
-                      <div className={styles.rowActions}>
-                        {editingId === p.id ? (
-                          <>
-                            <button
-                              className={styles.saveButton}
-                              onClick={handleUpdate}
-                              disabled={submitting}
-                            >
-                              保存
-                            </button>
-                            <button
-                              className={styles.cancelButton}
-                              onClick={() => setEditingId(null)}
-                              disabled={submitting}
-                            >
-                              取消
-                            </button>
-                          </>
-                        ) : (
-                          <button
-                            className={styles.editButton}
-                            onClick={() => {
-                              setEditingId(p.id);
-                              setEditName(p.name);
-                            }}
-                            disabled={submitting}
-                          >
-                            修改
-                          </button>
-                        )}
-                      </div>
-                    </td>
+          <section className={styles.card}>
+            <h2 className={styles.sectionTitle}>玩家列表</h2>
+            {loading ? (
+              <div className={styles.placeholder}>加载中...</div>
+            ) : players.length === 0 ? (
+              <div className={styles.placeholder}>
+                <span className="material-symbols-outlined">group_off</span>
+                暂无玩家
+              </div>
+            ) : (
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>玩家名称</th>
+                    <th>操作</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </section>
+                </thead>
+                <tbody>
+                  {players.map((p) => (
+                    <tr key={p.id}>
+                      <td className={styles.idCell}>{p.id}</td>
+                      <td>
+                        {editingId === p.id ? (
+                          <input
+                            type="text"
+                            className={styles.inlineInput}
+                            value={editingName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            autoFocus
+                          />
+                        ) : (
+                          <span className={styles.playerCell}>{p.name}</span>
+                        )}
+                      </td>
+                      <td>
+                        <div className={styles.rowActions}>
+                          {editingId === p.id ? (
+                            <>
+                              <button
+                                className={styles.saveButton}
+                                onClick={handleUpdate}
+                                disabled={submitting}
+                                type="button"
+                              >
+                                <span className="material-symbols-outlined">
+                                  check
+                                </span>
+                                保存
+                              </button>
+                              <button
+                                className={styles.cancelButton}
+                                onClick={() => setEditingId(null)}
+                                disabled={submitting}
+                                type="button"
+                              >
+                                取消
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                className={styles.editButton}
+                                onClick={() => {
+                                  setEditingId(p.id);
+                                  setEditName(p.name);
+                                }}
+                                disabled={submitting}
+                                type="button"
+                              >
+                                <span className="material-symbols-outlined">
+                                  edit
+                                </span>
+                                修改
+                              </button>
+                              <button
+                                className={styles.deleteButton}
+                                onClick={() => handleDelete(p.id, p.name)}
+                                disabled={submitting}
+                                type="button"
+                              >
+                                <span className="material-symbols-outlined">
+                                  delete
+                                </span>
+                                删除
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </section>
+        </div>
       </div>
-    </main>
+    </AppShell>
   );
 }
 

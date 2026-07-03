@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { isAuthenticated } from "@/lib/auth";
+import AppShell from "@/components/AppShell";
 import styles from "./page.module.css";
 
 interface Player {
@@ -482,241 +482,304 @@ export default function MatchesPage() {
   }
 
   return (
-    <main className={styles.container}>
-      <header className={styles.header}>
-        <Link href="/" className={styles.backButton}>
-          ← 返回首页
-        </Link>
-        <h1 className={styles.title}>对局管理</h1>
-      </header>
+    <AppShell>
+      <div className={styles.page}>
+        <div className={styles.pageHead}>
+          <h1 className={styles.pageTitle}>对局管理</h1>
+          <p className={styles.pageSubtitle}>新增、编辑、删除对局记录</p>
+        </div>
 
-      <div className={styles.content}>
-        <section className={styles.card}>
-          <div className={styles.cardHeader}>
-            <h2 className={styles.sectionTitle}>
-              {editingId ? `编辑对局 #${editingId}` : "新增对局"}
-            </h2>
-            {editingId && (
-              <button
-                className={styles.secondaryButton}
-                onClick={resetForm}
-                disabled={submitting}
-              >
-                取消编辑
-              </button>
-            )}
-          </div>
-
-          <form className={styles.form} onSubmit={handleSubmit}>
-            <div className={styles.formGrid}>
-              <div className={styles.formRow}>
-                <label>备注</label>
-                <input
-                  type="text"
-                  placeholder="备注（可选）"
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
+        <div className={styles.content}>
+          <section className={styles.card}>
+            <div className={styles.cardHeader}>
+              <h2 className={styles.sectionTitle}>
+                {editingId ? `编辑对局 #${editingId}` : "新增对局"}
+              </h2>
+              {editingId && (
+                <button
+                  className={styles.secondaryButton}
+                  onClick={resetForm}
                   disabled={submitting}
-                />
-              </div>
-              <div className={styles.formRow}>
-                <label>桌号</label>
-                <input
-                  type="text"
-                  placeholder="桌号（可选）"
-                  value={tableNo}
-                  onChange={(e) => setTableNo(e.target.value)}
-                  disabled={submitting}
-                />
-              </div>
-              <div className={styles.formRow}>
-                <label>对局时间</label>
-                <input
-                  type="datetime-local"
-                  value={playedAt}
-                  onChange={(e) => setPlayedAt(e.target.value)}
-                  disabled={submitting}
-                />
-              </div>
+                  type="button"
+                >
+                  取消编辑
+                </button>
+              )}
             </div>
 
-            <div className={styles.grid}>
-              {seatOptions.map(({ key, label }) => (
-                <div key={key} className={styles.seatCard}>
-                  <div className={styles.seatHeader}>
-                    <span>{label} 位</span>
-                  </div>
-                  <div className={styles.formRow}>
-                    <label>玩家</label>
-                    <SearchableSelect
-                      options={playerOptions}
-                      value={resultsForm[key].player_id}
-                      onChange={(val) =>
-                        setResultsForm((prev) => ({
-                          ...prev,
-                          [key]: { ...prev[key], player_id: val },
-                        }))
-                      }
-                      placeholder="选择玩家"
-                      disabled={submitting}
-                    />
-                  </div>
-                  <div className={styles.formRow}>
-                    <label>点数</label>
-                    <input
-                      type="number"
-                      value={resultsForm[key].points}
-                      onChange={(e) =>
-                        setResultsForm((prev) => ({
-                          ...prev,
-                          [key]: {
-                            ...prev[key],
-                            points:
-                              e.target.value === ""
-                                ? ""
-                                : Number(e.target.value),
-                          },
-                        }))
-                      }
-                      disabled={submitting}
-                    />
-                  </div>
+            <form className={styles.form} onSubmit={handleSubmit}>
+              <div className={styles.formGrid}>
+                <div className={styles.formRow}>
+                  <label>备注</label>
+                  <input
+                    type="text"
+                    placeholder="备注（可选）"
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    disabled={submitting}
+                  />
                 </div>
-              ))}
-            </div>
-
-            {message && <div className={styles.message}>{message}</div>}
-
-            <div className={styles.actions}>
-              <button type="submit" disabled={submitting}>
-                {submitting ? "提交中..." : editingId ? "保存修改" : "创建对局"}
-              </button>
-            </div>
-          </form>
-        </section>
-
-        <section className={styles.card}>
-          <div className={styles.cardHeader}>
-            <h2 className={styles.sectionTitle}>对局列表</h2>
-            <div className={styles.filters}>
-              <div className={styles.filterGroup}>
-                <label>开始日期</label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                />
+                <div className={styles.formRow}>
+                  <label>桌号</label>
+                  <input
+                    type="text"
+                    placeholder="桌号（可选）"
+                    value={tableNo}
+                    onChange={(e) => setTableNo(e.target.value)}
+                    disabled={submitting}
+                  />
+                </div>
+                <div className={styles.formRow}>
+                  <label>对局时间</label>
+                  <input
+                    type="datetime-local"
+                    value={playedAt}
+                    onChange={(e) => setPlayedAt(e.target.value)}
+                    disabled={submitting}
+                  />
+                </div>
               </div>
-              <div className={styles.filterGroup}>
-                <label>结束日期</label>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                />
-              </div>
-              <button 
-                className={styles.filterButton}
-                onClick={handleSearch} 
-                disabled={loading || submitting}
-              >
-                {loading ? "搜索中..." : "筛选对局"}
-              </button>
-            </div>
-          </div>
 
-          {loading ? (
-            <div className={styles.placeholder}>加载中...</div>
-          ) : matches.length === 0 ? (
-            <div className={styles.placeholder}>暂无对局</div>
-          ) : (
-            <>
-              <div className={styles.matchList}>
-                {matches.map((m) => (
-                  <div key={m.id} className={styles.matchCard}>
-                    <div className={styles.matchHeader}>
-                      <div>
-                        <div className={styles.matchTitle}>
-                          对局 #{m.id} {m.note ? `- ${m.note}` : ""}
-                        </div>
-                        <div className={styles.matchMeta}>
-                          {new Date(m.played_at).toLocaleString("zh-CN")}{" "}
-                          {m.table_no ? `| 桌号 ${m.table_no}` : ""}
-                        </div>
-                      </div>
-                      <div className={styles.matchActions}>
-                        <button
-                          className={styles.copyButton}
-                          onClick={() => handleCopy(m)}
-                          disabled={submitting}
-                        >
-                          复制
-                        </button>
-                        <button
-                          className={styles.secondaryButton}
-                          onClick={() => handleEdit(m)}
-                          disabled={submitting}
-                        >
-                          编辑
-                        </button>
-                        <button
-                          className={styles.deleteButton}
-                          onClick={() => handleDelete(m.id)}
-                          disabled={submitting}
-                        >
-                          删除
-                        </button>
-                      </div>
+              <div className={styles.grid}>
+                {seatOptions.map(({ key, label }) => (
+                  <div key={key} className={styles.seatCard}>
+                    <div className={styles.seatHeader}>
+                      <span className={styles.seatBadge}>{label}</span>
+                      <span className={styles.seatLabel}>位</span>
                     </div>
-                    <table className={styles.table}>
-                      <thead>
-                        <tr>
-                          <th>座位</th>
-                          <th>玩家</th>
-                          <th>名次</th>
-                          <th>点数</th>
-                          <th>得分</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {(m.results || []).map((r) => (
-                          <tr key={`${m.id}-${r.seat}`}>
-                            <td>{r.seat}</td>
-                            <td>{r.player.name}</td>
-                            <td>{r.rank}</td>
-                            <td>{r.points}</td>
-                            <td>{r.score?.toFixed(2)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                    <div className={styles.formRow}>
+                      <label>玩家</label>
+                      <SearchableSelect
+                        options={playerOptions}
+                        value={resultsForm[key].player_id}
+                        onChange={(val) =>
+                          setResultsForm((prev) => ({
+                            ...prev,
+                            [key]: { ...prev[key], player_id: val },
+                          }))
+                        }
+                        placeholder="选择玩家"
+                        disabled={submitting}
+                      />
+                    </div>
+                    <div className={styles.formRow}>
+                      <label>点数</label>
+                      <input
+                        type="number"
+                        value={resultsForm[key].points}
+                        onChange={(e) =>
+                          setResultsForm((prev) => ({
+                            ...prev,
+                            [key]: {
+                              ...prev[key],
+                              points:
+                                e.target.value === ""
+                                  ? ""
+                                  : Number(e.target.value),
+                            },
+                          }))
+                        }
+                        disabled={submitting}
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
 
-              {total > PAGE_SIZE && (
-                <div className={styles.pagination}>
-                  <button
-                    disabled={page === 1 || loading}
-                    onClick={() => handlePageChange(page - 1)}
-                  >
-                    上一页
-                  </button>
-                  <span className={styles.pageInfo}>
-                    第 {page} / {Math.ceil(total / PAGE_SIZE)} 页 (共 {total} 条)
+              {message && <div className={styles.message}>{message}</div>}
+
+              <div className={styles.actions}>
+                <button type="submit" disabled={submitting} className={styles.primaryButton}>
+                  <span className="material-symbols-outlined">
+                    {editingId ? "save" : "add"}
                   </span>
-                  <button
-                    disabled={page >= Math.ceil(total / PAGE_SIZE) || loading}
-                    onClick={() => handlePageChange(page + 1)}
-                  >
-                    下一页
-                  </button>
+                  {submitting ? "提交中..." : editingId ? "保存修改" : "创建对局"}
+                </button>
+              </div>
+            </form>
+          </section>
+
+          <section className={styles.card}>
+            <div className={styles.cardHeader}>
+              <h2 className={styles.sectionTitle}>对局列表</h2>
+              <div className={styles.filters}>
+                <div className={styles.filterGroup}>
+                  <label>开始日期</label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                  />
                 </div>
-              )}
-            </>
-          )}
-        </section>
+                <div className={styles.filterGroup}>
+                  <label>结束日期</label>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                  />
+                </div>
+                <button
+                  className={styles.filterButton}
+                  onClick={handleSearch}
+                  disabled={loading || submitting}
+                  type="button"
+                >
+                  <span className="material-symbols-outlined">search</span>
+                  {loading ? "搜索中..." : "筛选"}
+                </button>
+              </div>
+            </div>
+
+            {loading ? (
+              <div className={styles.placeholder}>加载中...</div>
+            ) : matches.length === 0 ? (
+              <div className={styles.placeholder}>
+                <span className="material-symbols-outlined">inbox</span>
+                暂无对局
+              </div>
+            ) : (
+              <>
+                <div className={styles.matchList}>
+                  {matches.map((m) => (
+                    <div key={m.id} className={styles.matchCard}>
+                      <div className={styles.matchHeader}>
+                        <div className={styles.matchMetaLeft}>
+                          <div className={styles.matchTitle}>
+                            对局 #{m.id} {m.note ? `- ${m.note}` : ""}
+                          </div>
+                          <div className={styles.matchMeta}>
+                            <span className="material-symbols-outlined">
+                              schedule
+                            </span>
+                            {new Date(m.played_at).toLocaleString("zh-CN")}
+                            {m.table_no ? ` · 桌号 ${m.table_no}` : ""}
+                          </div>
+                        </div>
+                        <div className={styles.matchActions}>
+                          <button
+                            className={styles.copyButton}
+                            onClick={() => handleCopy(m)}
+                            disabled={submitting}
+                            type="button"
+                          >
+                            <span className="material-symbols-outlined">
+                              content_copy
+                            </span>
+                            复制
+                          </button>
+                          <button
+                            className={styles.secondaryButton}
+                            onClick={() => handleEdit(m)}
+                            disabled={submitting}
+                            type="button"
+                          >
+                            <span className="material-symbols-outlined">
+                              edit
+                            </span>
+                            编辑
+                          </button>
+                          <button
+                            className={styles.deleteButton}
+                            onClick={() => handleDelete(m.id)}
+                            disabled={submitting}
+                            type="button"
+                          >
+                            <span className="material-symbols-outlined">
+                              delete
+                            </span>
+                            删除
+                          </button>
+                        </div>
+                      </div>
+                      <table className={styles.table}>
+                        <thead>
+                          <tr>
+                            <th>座位</th>
+                            <th>玩家</th>
+                            <th>名次</th>
+                            <th>点数</th>
+                            <th>得分</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(m.results || []).map((r) => (
+                            <tr key={`${m.id}-${r.seat}`}>
+                              <td>
+                                <span className={styles.seatChip}>
+                                  {r.seat}
+                                </span>
+                              </td>
+                              <td className={styles.playerCell}>
+                                {r.player.name}
+                              </td>
+                              <td>
+                                <span
+                                  className={`${styles.rankBadgeSm} ${
+                                    r.rank === 1
+                                      ? styles.rankGold
+                                      : r.rank === 4
+                                      ? styles.rankRed
+                                      : ""
+                                  }`}
+                                >
+                                  {r.rank}
+                                </span>
+                              </td>
+                              <td className={styles.pointsCell}>
+                                {r.points}
+                              </td>
+                              <td
+                                className={`${styles.scoreCell} ${
+                                  (r.score ?? 0) > 0
+                                    ? styles.positive
+                                    : (r.score ?? 0) < 0
+                                    ? styles.negative
+                                    : ""
+                                }`}
+                              >
+                                {r.score?.toFixed(2)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ))}
+                </div>
+
+                {total > PAGE_SIZE && (
+                  <div className={styles.pagination}>
+                    <button
+                      disabled={page === 1 || loading}
+                      onClick={() => handlePageChange(page - 1)}
+                      type="button"
+                    >
+                      <span className="material-symbols-outlined">
+                        chevron_left
+                      </span>
+                      上一页
+                    </button>
+                    <span className={styles.pageInfo}>
+                      第 {page} / {Math.ceil(total / PAGE_SIZE)} 页 · 共 {total} 条
+                    </span>
+                    <button
+                      disabled={page >= Math.ceil(total / PAGE_SIZE) || loading}
+                      onClick={() => handlePageChange(page + 1)}
+                      type="button"
+                    >
+                      下一页
+                      <span className="material-symbols-outlined">
+                        chevron_right
+                      </span>
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </section>
+        </div>
       </div>
-    </main>
+    </AppShell>
   );
 }

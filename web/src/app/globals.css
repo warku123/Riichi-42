@@ -1,69 +1,68 @@
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --accent: #4338ca;
-  --accent-hover: #3730a3;
-  --accent-soft: rgba(79, 70, 229, 0.08);
-  --accent-soft-strong: rgba(79, 70, 229, 0.14);
-  --accent-foreground: #ffffff;
-  --accent-ring: rgba(79, 70, 229, 0.35);
-  --danger: #dc2626;
-  --danger-soft: #fef2f2;
+  /* 字体 */
+  --font-serif: var(--font-serif), "Source Serif 4", Georgia, "Songti SC", serif;
+  --font-sans: var(--font-sans), "Hanken Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
 
-  --gray-50: #fafafa;
-  --gray-100: #f5f5f5;
-  --gray-200: #e5e5e5;
-  --gray-300: #d4d4d4;
-  --gray-400: #a3a3a3;
-  --gray-500: #737373;
-  --gray-600: #525252;
-  --gray-700: #404040;
-  --gray-800: #262626;
-  --gray-900: #171717;
+  /* 麻将绿主色 */
+  --green: #2D5A27;
+  --green-dark: #154212;
+  --green-light: #bcf0ae;
+  --green-light-2: #a1d494;
+  --green-container: #e6f2e0;
+  --green-on: #ffffff;
 
-  --radius: 8px;
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 3px 0 rgb(0 0 0 / 0.06);
-  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.06), 0 1px 2px 0 rgb(0 0 0 / 0.04);
-  --shadow-md: 0 12px 20px -4px rgb(0 0 0 / 0.10), 0 4px 8px -4px rgb(0 0 0 / 0.06), 0 1px 2px 0 rgb(0 0 0 / 0.04);
-  --shadow-lg: 0 24px 48px -12px rgb(0 0 0 / 0.22), 0 8px 16px -8px rgb(0 0 0 / 0.12);
-  --ring: 0 0 0 3px var(--accent-ring);
+  /* 功能色 */
+  --red: #B22222;
+  --red-container: #fbe6e6;
+  --red-on: #ffffff;
+  --gold: #D4AF37;
+  --gold-container: #f7eecb;
+  --gold-on: #3a2f00;
 
-  --primary: var(--gray-900);
-  --primary-foreground: #ffffff;
-  --header-bg: rgba(255, 255, 255, 0.82);
-  --font-sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-}
+  /* 文字 */
+  --ink: #1A1A1A;
+  --ink-secondary: #666666;
+  --ink-tertiary: #8a8a8a;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --accent: #818cf8;
-    --accent-hover: #a5b4fc;
-    --accent-soft: rgba(129, 140, 248, 0.12);
-    --accent-soft-strong: rgba(129, 140, 248, 0.20);
-    --accent-foreground: #0a0a0a;
-    --accent-ring: rgba(129, 140, 248, 0.40);
-    --danger: #f87171;
-    --danger-soft: rgba(248, 113, 113, 0.12);
+  /* 表面与背景 */
+  --bg: #f9f9f9;
+  --surface: #ffffff;
+  --surface-2: #f3f3f3;
+  --surface-3: #eeeeee;
+  --surface-4: #e8e8e8;
+  --surface-5: #e2e2e2;
 
-    --gray-50: #171717;
-    --gray-100: #262626;
-    --gray-200: #404040;
-    --gray-300: #525252;
-    --gray-400: #737373;
-    --gray-500: #a3a3a3;
-    --gray-600: #d4d4d4;
-    --gray-700: #e5e5e5;
-    --gray-800: #f5f5f5;
-    --gray-900: #fafafa;
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
-    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
-    --shadow-md: 0 12px 20px -4px rgb(0 0 0 / 0.5), 0 4px 8px -4px rgb(0 0 0 / 0.3);
-    --shadow-lg: 0 24px 48px -12px rgb(0 0 0 / 0.6), 0 8px 16px -8px rgb(0 0 0 / 0.4);
-    --primary-foreground: #0a0a0a;
-    --header-bg: rgba(10, 10, 10, 0.82);
-  }
+  /* 边框 */
+  --border: #c2c9bb;
+  --border-soft: rgba(194, 201, 187, 0.45);
+  --border-strong: #aeb6a4;
+
+  /* 圆角 */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 999px;
+
+  /* 阴影 */
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.04);
+  --shadow-hover: 0 8px 28px rgba(0, 0, 0, 0.08);
+  --shadow-pop: 0 12px 40px rgba(0, 0, 0, 0.12);
+  --shadow-fab: 0 6px 16px rgba(45, 90, 39, 0.28);
+
+  /* focus ring */
+  --ring: 0 0 0 3px rgba(45, 90, 39, 0.22);
+  --ring-red: 0 0 0 3px rgba(178, 34, 34, 0.18);
+
+  /* 兼容旧引用 */
+  --background: var(--bg);
+  --foreground: var(--ink);
+  --primary: var(--green);
+  --primary-foreground: var(--green-on);
+  --accent: var(--green);
+  --accent-foreground: var(--green-on);
+  --header-bg: var(--surface);
 }
 
 * {
@@ -77,9 +76,10 @@ body {
   max-width: 100vw;
   overflow-x: hidden;
   font-family: var(--font-sans);
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--bg);
+  color: var(--ink);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 a {
@@ -89,35 +89,58 @@ a {
 
 button {
   font-family: var(--font-sans);
-  }
+}
 
-input, select, textarea {
+input,
+select,
+textarea {
   font-family: var(--font-sans);
   color: inherit;
   background-color: transparent;
 }
 
 ::selection {
-  background: var(--accent-soft-strong);
-  color: var(--foreground);
+  background: var(--green-container);
+  color: var(--green-dark);
 }
 
-/* Scrollbar polish */
+/* 滚动条 */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--gray-300) transparent;
+  scrollbar-color: var(--surface-5) transparent;
 }
 *::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 *::-webkit-scrollbar-thumb {
-  background: var(--gray-300);
+  background: var(--surface-5);
   border-radius: 8px;
 }
 *::-webkit-scrollbar-thumb:hover {
-  background: var(--gray-400);
+  background: var(--border);
 }
 *::-webkit-scrollbar-track {
   background: transparent;
+}
+
+/* Material Symbols 基础样式 */
+.material-symbols-outlined {
+  font-family: "Material Symbols Outlined";
+  font-weight: normal;
+  font-style: normal;
+  font-size: 22px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+  user-select: none;
+  vertical-align: middle;
+}
+.material-symbols-outlined.fill {
+  font-variation-settings: "FILL" 1, "wght" 500, "GRAD" 0, "opsz" 24;
 }

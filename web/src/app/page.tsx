@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import {
   LineChart,
   Line,
@@ -13,7 +12,8 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from "recharts";
-import { isAuthenticated, logout, getUsername } from "@/lib/auth";
+import { isAuthenticated } from "@/lib/auth";
+import AppShell from "@/components/AppShell";
 import styles from "./page.module.css";
 
 interface PlayerTotal {
@@ -478,11 +478,6 @@ export default function Home() {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    router.push("/login");
-  };
-
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleString("zh-CN", {
@@ -504,381 +499,459 @@ export default function Home() {
     return map[seat] || seat;
   };
 
+  const scoreClass = (score: number) =>
+    score > 0 ? styles.positive : score < 0 ? styles.negative : "";
+
+  const rankBadgeClass = (rank: number, total: number) => {
+    if (rank === 1) return styles.rankGold;
+    if (rank === total) return styles.rankRed;
+    if (rank === 2) return styles.rankSilver;
+    return "";
+  };
+
   if (!mounted || !isAuthenticated()) {
     return null;
   }
 
   return (
-    <main className={styles.container}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>Riichi 记分系统</h1>
-        <div className={styles.userInfo}>
-          <span>欢迎，{getUsername()}</span>
-          <button onClick={handleLogout} className={styles.logoutButton}>
-            退出登录
-          </button>
+    <AppShell>
+      <div className={styles.page}>
+        {/* 工具栏：赛季切换 */}
+        <div className={styles.toolbar}>
+          <div className={styles.toolbarLeft}>
+            <h1 className={styles.pageTitle}>数据看板</h1>
+            <p className={styles.pageSubtitle}>天梯榜 · 最近对局 · 玩家走势</p>
+          </div>
+          <div className={styles.seasonSelector}>
+            <span className="material-symbols-outlined">event</span>
+            <select
+              value={selectedSeasonId}
+              onChange={(e) =>
+                handleSeasonChange(
+                  e.target.value === "all" ? "all" : Number(e.target.value)
+                )
+              }
+              className={styles.seasonSelect}
+            >
+              <option value="all">全部数据</option>
+              {seasons.map((season) => (
+                <option key={season.id} value={season.id}>
+                  {season.name}
+                  {season.is_active ? " (当前)" : ""}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={() => setShowSeasonModal(true)}
+              className={styles.seasonManageButton}
+              type="button"
+            >
+              <span className="material-symbols-outlined">settings</span>
+              赛季管理
+            </button>
+          </div>
         </div>
-      </header>
 
-      <nav className={styles.nav}>
-        <div className={styles.navLinks}>
-          <Link href="/matches" className={styles.navButton}>
-            对局记录修改
-          </Link>
-          <Link href="/players" className={styles.navButton}>
-            用户管理
-          </Link>
-        </div>
-        <div className={styles.seasonSelector}>
-          <label className={styles.seasonLabel}>赛季：</label>
-          <select
-            value={selectedSeasonId}
-            onChange={(e) => handleSeasonChange(e.target.value === "all" ? "all" : Number(e.target.value))}
-            className={styles.seasonSelect}
-          >
-            <option value="all">全部数据</option>
-            {seasons.map((season) => (
-              <option key={season.id} value={season.id}>
-                {season.name}{season.is_active ? " (当前)" : ""}
-              </option>
-            ))}
-          </select>
-          <button
-            onClick={() => setShowSeasonModal(true)}
-            className={styles.seasonManageButton}
-          >
-            赛季管理
-          </button>
-        </div>
-      </nav>
-
-      <div className={styles.content}>
-        {loading ? (
-          <div className={styles.loading}>加载中...</div>
-        ) : (
-          <>
-            <section className={styles.section}>
-              <div className={styles.sectionHeader}>
-                <h2 className={styles.sectionTitle}>分数天梯榜</h2>
-                <div className={styles.sortToggle}>
-                  <button 
-                    className={`${styles.sortButton} ${sortMode === "total" ? styles.activeSort : ""}`}
-                    onClick={() => setSortMode("total")}
-                  >
-                    总分
-                  </button>
-                  <button 
-                    className={`${styles.sortButton} ${sortMode === "avg" ? styles.activeSort : ""}`}
-                    onClick={() => setSortMode("avg")}
-                  >
-                    均分
-                  </button>
+        <div className={styles.content}>
+          {loading ? (
+            <div className={styles.loading}>加载中...</div>
+          ) : (
+            <>
+              <section className={styles.section}>
+                <div className={styles.sectionHeader}>
+                  <h2 className={styles.sectionTitle}>分数天梯榜</h2>
+                  <div className={styles.sortToggle}>
+                    <button
+                      className={`${styles.sortButton} ${
+                        sortMode === "total" ? styles.activeSort : ""
+                      }`}
+                      onClick={() => setSortMode("total")}
+                      type="button"
+                    >
+                      总分
+                    </button>
+                    <button
+                      className={`${styles.sortButton} ${
+                        sortMode === "avg" ? styles.activeSort : ""
+                      }`}
+                      onClick={() => setSortMode("avg")}
+                      type="button"
+                    >
+                      均分
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <div className={styles.tableContainer}>
-                <table className={styles.table}>
-                  <thead>
-                    <tr>
-                      <th>排名</th>
-                      <th>选手</th>
-                      <th>场次</th>
-                      <th>总分</th>
-                      <th>均分</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sortedLeaderboard.length === 0 ? (
+                <div className={styles.tableContainer}>
+                  <table className={styles.table}>
+                    <thead>
                       <tr>
-                        <td colSpan={5} className={styles.empty}>
-                          暂无数据
-                        </td>
+                        <th>排名</th>
+                        <th>选手</th>
+                        <th>场次</th>
+                        <th>总分</th>
+                        <th>均分</th>
                       </tr>
-                    ) : (
-                      sortedLeaderboard.map((player, index) => (
-                        <tr key={player.player_id}>
-                          <td>
-                            <span className={`${styles.rankBadge} ${index < 3 ? styles.topRank : ""}`}>
-                              {index + 1}
-                            </span>
-                          </td>
-                          <td style={{ fontWeight: 600 }}>{player.name}</td>
-                          <td className={styles.matchCount}>{player.match_count || 0}</td>
-                          <td className={styles.score}>
-                            {(player.total_score || 0).toFixed(2)}
-                          </td>
-                          <td className={styles.avgScore}>
-                            {player.match_count >= 10 
-                              ? ((player.total_score || 0) / player.match_count).toFixed(2)
-                              : "-"}
+                    </thead>
+                    <tbody>
+                      {sortedLeaderboard.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className={styles.empty}>
+                            暂无数据
                           </td>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-
-            <section className={styles.section}>
-              <h2 className={styles.sectionTitle}>最近五场对局</h2>
-              <div className={styles.matchesContainer}>
-                {recentMatches.length === 0 ? (
-                  <div className={styles.empty}>暂无对局记录</div>
-                ) : (
-                  recentMatches.map((match) => (
-                    <div key={match.id} className={styles.matchCard}>
-                      <div className={styles.matchHeader}>
-                        <span className={styles.matchDate}>
-                          {formatDate(match.played_at)}
-                        </span>
-                        {match.note && (
-                          <span className={styles.matchNote}>{match.note}</span>
-                        )}
-                      </div>
-                      <table className={styles.matchTable}>
-                        <thead>
-                          <tr>
-                            <th>排名</th>
-                            <th>选手</th>
-                            <th>座位</th>
-                            <th>点数</th>
-                            <th>得分</th>
+                      ) : (
+                        sortedLeaderboard.map((player, index) => (
+                          <tr key={player.player_id}>
+                            <td>
+                              <span
+                                className={`${styles.rankBadge} ${rankBadgeClass(
+                                  index + 1,
+                                  sortedLeaderboard.length
+                                )}`}
+                              >
+                                {index + 1}
+                              </span>
+                            </td>
+                            <td className={styles.playerCell}>{player.name}</td>
+                            <td className={styles.matchCount}>
+                              {player.match_count || 0}
+                            </td>
+                            <td
+                              className={`${styles.score} ${scoreClass(
+                                player.total_score || 0
+                              )}`}
+                            >
+                              {(player.total_score || 0).toFixed(2)}
+                            </td>
+                            <td className={styles.avgScore}>
+                              {player.match_count >= 10
+                                ? (
+                                    (player.total_score || 0) /
+                                    player.match_count
+                                  ).toFixed(2)
+                                : "-"}
+                            </td>
                           </tr>
-                        </thead>
-                        <tbody>
-                          {match.results
-                            ?.sort((a, b) => a.rank - b.rank)
-                            .map((result) => (
-                              <tr key={result.id}>
-                                <td>{result.rank}</td>
-                                <td>{result.player.name}</td>
-                                <td>{getSeatName(result.seat)}</td>
-                                <td>{result.points.toLocaleString()}</td>
-                                <td className={styles.score}>
-                                  {result.score.toFixed(2)}
-                                </td>
-                              </tr>
-                            ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ))
-                )}
-              </div>
-            </section>
-
-            <section className={styles.chartSection}>
-              <div className={styles.sectionHeader}>
-                <h2 className={styles.sectionTitle}>近10场数据统计</h2>
-                <div className={styles.playerSelector}>
-                  <label>选择玩家：</label>
-                  <SearchableSelect
-                    options={playerOptions}
-                    value={selectedPlayerId}
-                    onChange={handlePlayerChange}
-                    placeholder="请选择玩家"
-                  />
+                        ))
+                      )}
+                    </tbody>
+                  </table>
                 </div>
-              </div>
+              </section>
 
-              <div className={styles.chartContainer}>
-                {selectedPlayerId === "" ? (
-                  <div className={styles.chartPlaceholder}>
-                    <p>请选择一个玩家查看名次走势</p>
+              <section className={styles.section}>
+                <h2 className={styles.sectionTitle}>最近五场对局</h2>
+                <div className={styles.matchesContainer}>
+                  {recentMatches.length === 0 ? (
+                    <div className={styles.empty}>暂无对局记录</div>
+                  ) : (
+                    recentMatches.map((match) => (
+                      <div key={match.id} className={styles.matchCard}>
+                        <div className={styles.matchHeader}>
+                          <span className={styles.matchDate}>
+                            {formatDate(match.played_at)}
+                          </span>
+                          {match.note && (
+                            <span className={styles.matchNote}>
+                              {match.note}
+                            </span>
+                          )}
+                        </div>
+                        <table className={styles.matchTable}>
+                          <thead>
+                            <tr>
+                              <th>排名</th>
+                              <th>选手</th>
+                              <th>座位</th>
+                              <th>点数</th>
+                              <th>得分</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {match.results
+                              ?.sort((a, b) => a.rank - b.rank)
+                              .map((result) => (
+                                <tr key={result.id}>
+                                  <td>
+                                    <span
+                                      className={`${styles.rankBadgeSm} ${rankBadgeClass(
+                                        result.rank,
+                                        4
+                                      )}`}
+                                    >
+                                      {result.rank}
+                                    </span>
+                                  </td>
+                                  <td>{result.player.name}</td>
+                                  <td>{getSeatName(result.seat)}</td>
+                                  <td className={styles.pointsCell}>
+                                    {result.points.toLocaleString()}
+                                  </td>
+                                  <td
+                                    className={`${styles.score} ${scoreClass(
+                                      result.score
+                                    )}`}
+                                  >
+                                    {result.score.toFixed(2)}
+                                  </td>
+                                </tr>
+                              ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </section>
+
+              <section className={styles.chartSection}>
+                <div className={styles.sectionHeader}>
+                  <h2 className={styles.sectionTitle}>近10场数据统计</h2>
+                  <div className={styles.playerSelector}>
+                    <SearchableSelect
+                      options={playerOptions}
+                      value={selectedPlayerId}
+                      onChange={handlePlayerChange}
+                      placeholder="请选择玩家"
+                    />
                   </div>
-                ) : chartLoading ? (
-                  <div className={styles.chartPlaceholder}>
-                    <p>加载中...</p>
-                  </div>
-                ) : historyData.length === 0 ? (
-                  <div className={styles.chartPlaceholder}>
-                    <p>该玩家在当前赛季暂无对局记录</p>
-                  </div>
-                ) : (
-                  <>
-                    <div className={styles.chartInfo}>
-                      <span className={styles.playerName}>{selectedPlayerName}</span>
-                      <span className={styles.chartHint}>
-                        近 {historyData.length} 场对局
+                </div>
+
+                <div className={styles.chartContainer}>
+                  {selectedPlayerId === "" ? (
+                    <div className={styles.chartPlaceholder}>
+                      <span className="material-symbols-outlined">
+                        show_chart
                       </span>
+                      <p>请选择一个玩家查看名次走势</p>
                     </div>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <LineChart
-                        data={chartData}
-                        margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" stroke="var(--gray-200)" />
-                        <XAxis
-                          dataKey="date"
-                          tick={{ fill: "var(--gray-500)", fontSize: 12 }}
-                          axisLine={{ stroke: "var(--gray-300)" }}
-                        />
-                        <YAxis
-                          domain={[1, 4]}
-                          ticks={[1, 2, 3, 4]}
-                          reversed
-                          tick={{ fill: "var(--gray-500)", fontSize: 12 }}
-                          axisLine={{ stroke: "var(--gray-300)" }}
-                          label={{
-                            value: "名次",
-                            angle: -90,
-                            position: "insideLeft",
-                            fill: "var(--gray-500)",
-                            fontSize: 12,
-                          }}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            background: "var(--background)",
-                            border: "1px solid var(--gray-200)",
-                            borderRadius: "8px",
-                            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                          }}
-                          formatter={(value) => [`第 ${value} 名`, "名次"]}
-                          labelFormatter={(label) => `日期: ${label}`}
-                        />
-                        <ReferenceLine
-                          y={2.5}
-                          stroke="var(--gray-300)"
-                          strokeDasharray="5 5"
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="rank"
-                          stroke="var(--gray-900)"
-                          strokeWidth={2}
-                          dot={{
-                            fill: "var(--gray-900)",
-                            strokeWidth: 2,
-                            r: 5,
-                          }}
-                          activeDot={{
-                            r: 7,
-                            fill: "var(--gray-900)",
-                          }}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-
-                    {/* 统计卡片 */}
-                    <div className={styles.statsGrid}>
-                      <div className={styles.statCard}>
-                        <span className={styles.statLabel}>平均名次</span>
-                        <span className={styles.statValue}>
-                          {(
-                            historyData.reduce((sum, h) => sum + h.rank, 0) /
-                            historyData.length
-                          ).toFixed(2)}
-                        </span>
-                      </div>
-                      <div className={styles.statCard}>
-                        <span className={styles.statLabel}>总得分</span>
-                        <span className={styles.statValue}>
-                          {historyData
-                            .reduce((sum, h) => sum + h.score, 0)
-                            .toFixed(2)}
-                        </span>
-                      </div>
-                      <div className={styles.statCard}>
-                        <span className={styles.statLabel}>第一次数</span>
-                        <span className={styles.statValue}>
-                          {historyData.filter((h) => h.rank === 1).length}
-                        </span>
-                      </div>
-                      <div className={styles.statCard}>
-                        <span className={styles.statLabel}>第四次数</span>
-                        <span className={styles.statValue}>
-                          {historyData.filter((h) => h.rank === 4).length}
-                        </span>
-                      </div>
+                  ) : chartLoading ? (
+                    <div className={styles.chartPlaceholder}>
+                      <p>加载中...</p>
                     </div>
-                  </>
-                )}
-              </div>
-            </section>
-          </>
-        )}
-      </div>
+                  ) : historyData.length === 0 ? (
+                    <div className={styles.chartPlaceholder}>
+                      <p>该玩家在当前赛季暂无对局记录</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className={styles.chartInfo}>
+                        <span className={styles.playerName}>
+                          {selectedPlayerName}
+                        </span>
+                        <span className={styles.chartHint}>
+                          近 {historyData.length} 场对局
+                        </span>
+                      </div>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <LineChart
+                          data={chartData}
+                          margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                        >
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke="var(--border-soft)"
+                          />
+                          <XAxis
+                            dataKey="date"
+                            tick={{ fill: "var(--ink-secondary)", fontSize: 12 }}
+                            axisLine={{ stroke: "var(--border)" }}
+                            tickLine={false}
+                          />
+                          <YAxis
+                            domain={[1, 4]}
+                            ticks={[1, 2, 3, 4]}
+                            reversed
+                            tick={{ fill: "var(--ink-secondary)", fontSize: 12 }}
+                            axisLine={{ stroke: "var(--border)" }}
+                            tickLine={false}
+                            label={{
+                              value: "名次",
+                              angle: -90,
+                              position: "insideLeft",
+                              fill: "var(--ink-secondary)",
+                              fontSize: 12,
+                            }}
+                          />
+                          <Tooltip
+                            contentStyle={{
+                              background: "var(--surface)",
+                              border: "1px solid var(--border)",
+                              borderRadius: "12px",
+                              boxShadow: "var(--shadow-pop)",
+                              fontSize: "0.875rem",
+                            }}
+                            formatter={(value) => [`第 ${value} 名`, "名次"]}
+                            labelFormatter={(label) => `日期: ${label}`}
+                          />
+                          <ReferenceLine
+                            y={2.5}
+                            stroke="var(--border-strong)"
+                            strokeDasharray="5 5"
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="rank"
+                            stroke="var(--green)"
+                            strokeWidth={2.5}
+                            dot={{
+                              fill: "var(--green)",
+                              strokeWidth: 0,
+                              r: 5,
+                            }}
+                            activeDot={{
+                              r: 7,
+                              fill: "var(--green-dark)",
+                              strokeWidth: 2,
+                              stroke: "var(--gold)",
+                            }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
 
-      {/* 赛季管理弹窗 */}
-      {showSeasonModal && (
-        <div className={styles.modalOverlay} onClick={() => setShowSeasonModal(false)}>
-          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h3>赛季管理</h3>
-              <button 
-                onClick={() => setShowSeasonModal(false)}
-                className={styles.modalClose}
-              >
-                ×
-              </button>
-            </div>
-            
-            <div className={styles.modalContent}>
-              {/* 创建新赛季 */}
-              <div className={styles.createSeasonForm}>
-                <h4>创建新赛季</h4>
-                <p className={styles.formHint}>
-                  创建新赛季会自动结束当前活跃的赛季
-                </p>
-                <div className={styles.formRow}>
-                  <input
-                    type="text"
-                    placeholder="赛季名称（如：S2 - 2026春季赛）"
-                    value={newSeasonName}
-                    onChange={(e) => setNewSeasonName(e.target.value)}
-                    className={styles.input}
-                  />
+                      {/* 统计卡片 */}
+                      <div className={styles.statsGrid}>
+                        <div
+                          className={`${styles.statCard} ${styles.statAvg}`}
+                        >
+                          <span className={styles.statLabel}>平均名次</span>
+                          <span className={styles.statValue}>
+                            {(
+                              historyData.reduce((sum, h) => sum + h.rank, 0) /
+                              historyData.length
+                            ).toFixed(2)}
+                          </span>
+                        </div>
+                        <div
+                          className={`${styles.statCard} ${styles.statTotal}`}
+                        >
+                          <span className={styles.statLabel}>总得分</span>
+                          <span
+                            className={`${styles.statValue} ${scoreClass(
+                              historyData.reduce((sum, h) => sum + h.score, 0)
+                            )}`}
+                          >
+                            {historyData
+                              .reduce((sum, h) => sum + h.score, 0)
+                              .toFixed(2)}
+                          </span>
+                        </div>
+                        <div
+                          className={`${styles.statCard} ${styles.statFirst}`}
+                        >
+                          <span className={styles.statLabel}>第一次数</span>
+                          <span className={styles.statValue}>
+                            {historyData.filter((h) => h.rank === 1).length}
+                          </span>
+                        </div>
+                        <div
+                          className={`${styles.statCard} ${styles.statLast}`}
+                        >
+                          <span className={styles.statLabel}>第四次数</span>
+                          <span className={styles.statValue}>
+                            {historyData.filter((h) => h.rank === 4).length}
+                          </span>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
-                <div className={styles.formRow}>
-                  <input
-                    type="datetime-local"
-                    value={newSeasonStartDate}
-                    onChange={(e) => setNewSeasonStartDate(e.target.value)}
-                    className={styles.input}
-                  />
-                </div>
+              </section>
+            </>
+          )}
+        </div>
+
+        {/* 赛季管理弹窗 */}
+        {showSeasonModal && (
+          <div
+            className={styles.modalOverlay}
+            onClick={() => setShowSeasonModal(false)}
+          >
+            <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+              <div className={styles.modalHeader}>
+                <h3>赛季管理</h3>
                 <button
-                  onClick={handleCreateSeason}
-                  className={styles.createButton}
+                  onClick={() => setShowSeasonModal(false)}
+                  className={styles.modalClose}
+                  type="button"
+                  aria-label="关闭"
                 >
-                  创建新赛季
+                  <span className="material-symbols-outlined">close</span>
                 </button>
               </div>
 
-              {/* 赛季列表 */}
-              <div className={styles.seasonList}>
-                <h4>赛季列表</h4>
-                {seasons.length === 0 ? (
-                  <p className={styles.emptyHint}>暂无赛季</p>
-                ) : (
-                  <ul className={styles.seasonItems}>
-                    {seasons.map((season) => (
-                      <li key={season.id} className={styles.seasonItem}>
-                        <div className={styles.seasonInfo}>
-                          <span className={styles.seasonName}>
-                            {season.name}
-                            {season.is_active && (
-                              <span className={styles.activeBadge}>当前</span>
-                            )}
-                          </span>
-                          <span className={styles.seasonDate}>
-                            {new Date(season.start_date).toLocaleDateString("zh-CN")}
-                            {" - "}
-                            {season.end_date 
-                              ? new Date(season.end_date).toLocaleDateString("zh-CN")
-                              : "至今"}
-                          </span>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+              <div className={styles.modalContent}>
+                {/* 创建新赛季 */}
+                <div className={styles.createSeasonForm}>
+                  <h4>创建新赛季</h4>
+                  <p className={styles.formHint}>
+                    创建新赛季会自动结束当前活跃的赛季
+                  </p>
+                  <div className={styles.formRow}>
+                    <input
+                      type="text"
+                      placeholder="赛季名称（如：S2 - 2026春季赛）"
+                      value={newSeasonName}
+                      onChange={(e) => setNewSeasonName(e.target.value)}
+                      className={styles.input}
+                    />
+                  </div>
+                  <div className={styles.formRow}>
+                    <input
+                      type="datetime-local"
+                      value={newSeasonStartDate}
+                      onChange={(e) => setNewSeasonStartDate(e.target.value)}
+                      className={styles.input}
+                    />
+                  </div>
+                  <button
+                    onClick={handleCreateSeason}
+                    className={styles.createButton}
+                    type="button"
+                  >
+                    <span className="material-symbols-outlined">add</span>
+                    创建新赛季
+                  </button>
+                </div>
+
+                {/* 赛季列表 */}
+                <div className={styles.seasonList}>
+                  <h4>赛季列表</h4>
+                  {seasons.length === 0 ? (
+                    <p className={styles.emptyHint}>暂无赛季</p>
+                  ) : (
+                    <ul className={styles.seasonItems}>
+                      {seasons.map((season) => (
+                        <li key={season.id} className={styles.seasonItem}>
+                          <div className={styles.seasonInfo}>
+                            <span className={styles.seasonName}>
+                              {season.name}
+                              {season.is_active && (
+                                <span className={styles.activeBadge}>当前</span>
+                              )}
+                            </span>
+                            <span className={styles.seasonDate}>
+                              {new Date(season.start_date).toLocaleDateString(
+                                "zh-CN"
+                              )}
+                              {" - "}
+                              {season.end_date
+                                ? new Date(season.end_date).toLocaleDateString(
+                                    "zh-CN"
+                                  )
+                                : "至今"}
+                            </span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
-      </main>
+        )}
+      </div>
+    </AppShell>
   );
 }
